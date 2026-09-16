@@ -48,6 +48,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: TEMP DEBUG - verify checked out source
+        run: |
+          echo "HEAD commit: $(git rev-parse HEAD)"
+          echo "Grepping lib.rs for the relevant symbol names:"
+          grep -n "cluster_effects_py\|cluster_taxa_py" peptonizer_rust/src/lib.rs || echo "NEITHER FOUND"
+        shell: bash
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
