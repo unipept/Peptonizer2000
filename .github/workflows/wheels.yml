@@ -48,13 +48,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: TEMP DEBUG - verify checked out source
-        run: |
-          echo "HEAD commit: $(git rev-parse HEAD)"
-          echo "Grepping lib.rs for the relevant symbol names:"
-          grep -n "cluster_effects_py\|cluster_taxa_py" src/lib.rs || echo "NEITHER FOUND"
-        shell: bash
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -67,23 +60,6 @@ jobs:
           manylinux: auto
           working-directory: peptonizer_rust
           args: --release --out dist -i python3.12
-
-      - name: TEMP DEBUG - inspect just-built wheel
-        run: |
-          echo "Files in dist:"
-          ls -la dist/*.whl
-          for w in dist/*.whl; do
-            echo "=== $w ==="
-            unzip -l "$w"
-            member=$(unzip -Z1 "$w" | grep -E '\.(so|pyd)$' || true)
-            if [ -n "$member" ]; then
-              echo "binary member: $member"
-              unzip -p "$w" "$member" | strings -a | grep -o "cluster_effects_py\|cluster_taxa_py" | sort -u || echo "NEITHER SYMBOL FOUND"
-            else
-              echo "no .so/.pyd member found in wheel"
-            fi
-          done
-        shell: bash
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
