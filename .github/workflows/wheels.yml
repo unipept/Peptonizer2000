@@ -74,18 +74,8 @@ jobs:
           ls -la dist/*.whl
           for w in dist/*.whl; do
             echo "=== $w ==="
-            python3 - "$w" <<'PYEOF'
-import sys, zipfile
-z = zipfile.ZipFile(sys.argv[1])
-hit = False
-for n in z.namelist():
-    if n.endswith(".so") or n.endswith(".pyd"):
-        hit = True
-        data = z.read(n)
-        print(n, "cluster_effects_py:", b"cluster_effects_py" in data, "cluster_taxa_py:", b"cluster_taxa_py" in data)
-if not hit:
-    print("no .so/.pyd found in wheel:", z.namelist())
-PYEOF
+            unzip -l "$w"
+            unzip -p "$w" '*.so' '*.pyd' 2>/dev/null | strings -a | grep -o "cluster_effects_py\|cluster_taxa_py" | sort -u
           done
         shell: bash
 
