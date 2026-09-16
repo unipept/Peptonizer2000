@@ -83,8 +83,16 @@ jobs:
 
       - name: Copy wheels into repo
         run: |
+          rm -f peptonizer_rust/dist/*.whl
           mkdir -p peptonizer_rust/dist
-          find artifacts -name "*.whl" -exec cp {} peptonizer_rust/dist/ \;
+          find artifacts -name "*.whl" -print -exec cp {} peptonizer_rust/dist/ \;
+
+          count=$(find peptonizer_rust/dist -name "*.whl" | wc -l)
+          echo "Copied $count wheel(s) into peptonizer_rust/dist"
+          if [ "$count" -ne 5 ]; then
+            echo "::error::Expected 5 wheels (one per matrix platform), found $count. Not committing a partial set."
+            exit 1
+          fi
 
       - name: Commit wheels
         run: |
