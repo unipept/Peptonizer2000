@@ -221,8 +221,8 @@ Do not change the config file location.
    </details>
    <details > <summary> UniPept query parameters </summary>
    <ul>
-       <li>effect_rank: rank at which results will be reported </li>
-       <li>effect_query: effects comprised in the UniPept query. If querying all of Unipept, use 1 (list)</li>
+       <li>taxon_rank: NCBI rank at which taxonomic results will be reported </li>
+       <li>taxon_query: taxa comprised in the Unipept query. If querying all of Unipept, use 1 (list)</li>
    </ul> 
    </details>
 </details>
