@@ -48,6 +48,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clean checked-out dist directory
+        run: rm -f dist/*.whl
+        shell: bash
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
