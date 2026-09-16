@@ -87,7 +87,7 @@ jobs:
 
       - name: Copy wheels into repo
         run: |
-          rm -f peptonizer_rust/dist/*.whl
+          git rm -f --ignore-unmatch peptonizer_rust/dist/*.whl
           mkdir -p peptonizer_rust/dist
           find artifacts -name "*.whl" -print -exec cp {} peptonizer_rust/dist/ \;
 
