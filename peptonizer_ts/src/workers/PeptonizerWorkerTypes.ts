@@ -8,17 +8,18 @@ enum WorkerTask {
     COMPUTE_GOODNESS
 }
 
-interface FetchUnipeptTaxonTaskData {
+interface FetchUnipeptEffectTaskData {
     peptidesScores: Map<string, number>;
     rank: string;
-    taxonQuery: number[];
+    effectQuery: number[];
 }
 
-interface PerformTaxaWeighingTaskData {
-    peptidesTaxa: Map<string, number[]>;
+interface PerformEffectsWeighingTaskData {
+    peptidesEffects: Map<string, number[]>;
     peptidesScores: Map<string, number>;
     peptidesCounts: Map<string, number>;
-    taxaInGraph: number;
+    rank?: string;
+    effectsInGraph: number;
 }
 
 interface GenerateGraphTaskData {
@@ -32,36 +33,36 @@ interface ExecutePepgmTaskData {
     prior: number,
 }
 
-interface ClusterTaxaTaskData {
+interface ClusterEffectsTaskData {
     sequenceScoresCsv: string,
-    taxaWeightsCsv: string,
+    effectsWeightsCsv: string,
     similarityThreshold: number
 }
 
 interface ComputeGoodnessTaskData {
-    clusteredTaxaWeightsCsv: string,
+    effectClusterHeadsCsv: string,
     peptonizerResults: Map<string, number>
 }
 
 type SpecificInputEventData =
-    { task: WorkerTask.FETCH_UNIPEPT_TAXON, input: FetchUnipeptTaxonTaskData} |
-    { task: WorkerTask.PERFORM_TAXA_WEIGHING, input: PerformTaxaWeighingTaskData } |
+    { task: WorkerTask.FETCH_UNIPEPT_TAXON, input: FetchUnipeptEffectTaskData} |
+    { task: WorkerTask.PERFORM_TAXA_WEIGHING, input: PerformEffectsWeighingTaskData } |
     { task: WorkerTask.GENERATE_GRAPH, input: GenerateGraphTaskData } |
     { task: WorkerTask.EXECUTE_PEPGM, input: ExecutePepgmTaskData } |
-    { task: WorkerTask.CLUSTER_TAXA, input: ClusterTaxaTaskData } |
+    { task: WorkerTask.CLUSTER_TAXA, input: ClusterEffectsTaskData } |
     { task: WorkerTask.COMPUTE_GOODNESS, input: ComputeGoodnessTaskData };
 
 type CommonInputEventData = { workerId: number };
 
 type InputEventData = SpecificInputEventData & CommonInputEventData;
 
-interface FetchUnipeptTaxonTaskResult {
+interface FetchUnipeptEffectTaskResult {
     unipeptJson: string,
 }
 
-interface PerformTaxaWeighingTaskResult {
+interface PerformEffectsWeighingTaskResult {
     sequenceScoresCsv: string,
-    taxaWeightsCsv: string
+    effectsWeightsCsv: string
 }
 
 interface GenerateGraphTaskDataResult {
@@ -69,7 +70,7 @@ interface GenerateGraphTaskDataResult {
 }
 
 interface ExecutePepgmTaskDataResult {
-    taxonScoresJson: string
+    effectScoresJson: string
 }
 
 interface PepgmProgressUpdate {
@@ -78,8 +79,8 @@ interface PepgmProgressUpdate {
     maxValue: number
 }
 
-interface ClusterTaxaTaskDataResult {
-    clusteredTaxaWeightsCsv: string
+interface ClusterEffectsTaskDataResult {
+    effectClusterHeadsCsv: string
 }
 
 interface ComputeGoodnessDataResult {
@@ -94,11 +95,11 @@ enum ResultType {
 }
 
 type SpecificOutputEventData = { resultType: ResultType.SUCCESSFUL } & (
-    { task: WorkerTask.FETCH_UNIPEPT_TAXON, output: FetchUnipeptTaxonTaskResult } |
-    { task: WorkerTask.PERFORM_TAXA_WEIGHING, output: PerformTaxaWeighingTaskResult } |
+    { task: WorkerTask.FETCH_UNIPEPT_TAXON, output: FetchUnipeptEffectTaskResult } |
+    { task: WorkerTask.PERFORM_TAXA_WEIGHING, output: PerformEffectsWeighingTaskResult } |
     { task: WorkerTask.GENERATE_GRAPH, output: GenerateGraphTaskDataResult } |
     { task: WorkerTask.EXECUTE_PEPGM, output: ExecutePepgmTaskDataResult } |
-    { task: WorkerTask.CLUSTER_TAXA, output: ClusterTaxaTaskDataResult } |
+    { task: WorkerTask.CLUSTER_TAXA, output: ClusterEffectsTaskDataResult } |
     { task: WorkerTask.COMPUTE_GOODNESS, output: ComputeGoodnessDataResult });
 
 type CommonOutputEventData = { workerId: number };
@@ -114,19 +115,19 @@ export {
 };
 
 export type {
-    FetchUnipeptTaxonTaskData, 
-    PerformTaxaWeighingTaskData,
+    FetchUnipeptEffectTaskData, 
+    PerformEffectsWeighingTaskData,
     GenerateGraphTaskData,
     ExecutePepgmTaskData,
-    ClusterTaxaTaskData,
+    ClusterEffectsTaskData,
     ComputeGoodnessTaskData,
     SpecificInputEventData,
     InputEventData,
-    FetchUnipeptTaxonTaskResult,
-    PerformTaxaWeighingTaskResult,
+    FetchUnipeptEffectTaskResult,
+    PerformEffectsWeighingTaskResult,
     GenerateGraphTaskDataResult,
     ExecutePepgmTaskDataResult,
-    ClusterTaxaTaskDataResult,
+    ClusterEffectsTaskDataResult,
     ComputeGoodnessDataResult,
     OutputEventData,
     PepgmProgressUpdate,

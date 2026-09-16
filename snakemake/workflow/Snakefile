@@ -41,24 +41,24 @@ rule GetTaxonomyFromUnipept:
         {params.run_command} scripts/pout_to_taxonomy.py --input-file {input[0]} --unipept-response-file {output[0]} --taxonomy-query {params.taxon_query} --taxon-rank {params.taxon_rank}
         """
 
-rule WeightTaxa:
+rule WeightEffects:
     input:
         config['input_file'],
         path.join(data_dir, 'peptide_taxa.json')
     output:
         path.join(data_dir, 'sequence_scores_dataframe.csv'),
-        path.join(data_dir, 'taxa_weights_dataframe.csv')
+        path.join(data_dir, 'effects_weights_dataframe.csv')
     params:
-        number_of_taxa=config['taxa_in_graph'],
-        run_command=select_command(config['profile'], path.join(benchmark_dir, "weight_taxa.prof")),
+        number_of_effects=config['effects_in_graph'],
+        run_command=select_command(config['profile'], path.join(benchmark_dir, "weight_effects.prof")),
         taxon_rank=config['taxon_rank'],
     benchmark:
-        path.join(benchmark_dir, "weight_taxa.tsv")
+        path.join(benchmark_dir, "weight_effects.tsv")
     conda: "env.yml"
     shell:
         """
         export PYTHONPATH={project_root}:${{PYTHONPATH:-}}
-        {params.run_command} scripts/infer_taxa_weights.py --pout-file {input[0]} --unipept-response-file {input[1]}  --sequence-scores-dataframe-file {output[0]} --taxa-weights-dataframe-file {output[1]} --number-of-taxa {params.number_of_taxa} --taxon-rank {params.taxon_rank}
+        {params.run_command} scripts/infer_effects_weights.py --pout-file {input[0]} --unipept-response-file {input[1]}  --sequence-scores-dataframe-file {output[0]} --effects-weights-dataframe-file {output[1]} --number-of-effects {params.number_of_effects} --effect-rank {params.taxon_rank}
         """
 
 rule CreatePepGMGraph:
@@ -100,36 +100,36 @@ rule GenerateBarPlot:
     output:
         path.join(data_dir, 'prior{prior}', 'pepgm_results_a{alpha}_b{beta}_p{prior}.png')
     params:
-        taxa_in_plot=config['taxa_in_plot'],
+        effects_in_plot=config['effects_in_plot'],
         run_command=select_command(config['profile'], path.join(benchmark_dir, 'prior{prior}', "generate_bar_plot_a{alpha}_b{beta}_p{prior}.prof"))
     conda: "env.yml"
     shell:
         """
         export PYTHONPATH={project_root}:${{PYTHONPATH:-}}
-        {params.run_command} scripts/bar_plot_results.py --results-file {input[0]} --out {output[0]} --number-of-results {params.taxa_in_plot}
+        {params.run_command} scripts/bar_plot_results.py --results-file {input[0]} --out {output[0]} --number-of-results {params.effects_in_plot}
         """
 
-rule PerformTaxaClustering:
+rule PerformEffectsClustering:
     input:
         path.join(data_dir, 'sequence_scores_dataframe.csv'),
-        path.join(data_dir, 'taxa_weights_dataframe.csv')
+        path.join(data_dir, 'effects_weights_dataframe.csv')
     output:
-        path.join(data_dir, 'clustered_taxa_weights_dataframe.csv')
+        path.join(data_dir, 'effect_cluster_heads_dataframe.csv')
     params:
         similarity_threshold = 0.9,
-        run_command=select_command(config['profile'], path.join(benchmark_dir, "perform_taxa_clustering.prof"))
+        run_command=select_command(config['profile'], path.join(benchmark_dir, "perform_effects_clustering.prof"))
     benchmark:
         path.join(benchmark_dir, "create_pepgm_graph.tsv")
     conda: "env.yml"
     shell:
         """
         export PYTHONPATH={project_root}:${{PYTHONPATH:-}}
-        {params.run_command} scripts/cluster_taxa.py --sequence-scores-dataframe-file {input[0]} --taxa-weights-dataframe-file {input[1]} --similarity-threshold {params.similarity_threshold} --out {output[0]}
+        {params.run_command} scripts/cluster_effects.py --sequence-scores-dataframe-file {input[0]} --effects-weights-dataframe-file {input[1]} --similarity-threshold {params.similarity_threshold} --out {output[0]}
         """
 
 rule FindBestParameters:
     input:
-        path.join(data_dir, 'clustered_taxa_weights_dataframe.csv'),
+        path.join(data_dir, 'effect_cluster_heads_dataframe.csv'),
         expand(path.join(data_dir, 'prior{prior}', 'pepgm_results_a{alpha}_b{beta}_p{prior}.png'), alpha=config['alpha'], beta=config['beta'], prior=config['prior'])
     output:
         path.join(data_dir, 'best_parameters.csv'),
@@ -144,5 +144,5 @@ rule FindBestParameters:
     shell:
         """
         export PYTHONPATH={project_root}:${{PYTHONPATH:-}}
-        {params.run_command} scripts/find_best_parameters.py --taxa-weights-dataframe-file {input[0]} --results-folder {params.results_dir} --best-params-file {output[0]} --best-params-json {output[1]} --best-params-png {output[2]}
+        {params.run_command} scripts/find_best_parameters.py --effect-cluster-heads-file {input[0]} --results-folder {params.results_dir} --best-params-file {output[0]} --best-params-json {output[1]} --best-params-png {output[2]}
         """

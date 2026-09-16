@@ -183,19 +183,20 @@ const startToPeptonize = async function() {
         
         let workerPool = new WorkerPool(1);
         const rank: string = "species";
-        const taxonQuery: number[] = [2, 3];
-        const peptidesTaxaString = await workerPool.fetchUnipeptTaxonInfo(peptidesScores, rank, taxonQuery);
+        const effectQuery: number[] = [2, 3];
+        const peptidesEffectsString = await workerPool.fetchUnipeptEffectInfo(peptidesScores, rank, effectQuery);
 
-        const peptidesTaxaJson = JSON.parse(peptidesTaxaString);
-        const peptidesTaxa: Map<string, number[]> = new Map(Object.entries(peptidesTaxaJson));
+        const peptidesEffectsJson = JSON.parse(peptidesEffectsString);
+        const peptidesEffects: Map<string, number[]> = new Map(Object.entries(peptidesEffectsJson));
 
         const peptonizerResult = await peptonizer.peptonize(
-            peptidesTaxa,
+            peptidesEffects,
             peptidesScores,
             peptidesCounts,
             alphas,
             betas,
             priors,
+            rank,
             50,
             new ProgressListener(document.getElementById("progress-view")!, 2),
             1 // 1 worker for debuggin purposes

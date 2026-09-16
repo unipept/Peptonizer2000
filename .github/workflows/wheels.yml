@@ -9,6 +9,10 @@ on:
 
   workflow_dispatch:
 
+concurrency:
+  group: wheels-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -43,6 +47,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Clean checked-out dist directory
+        run: rm -f dist/*.whl
+        shell: bash
 
       - uses: actions/setup-python@v5
         with:
@@ -79,8 +87,16 @@ jobs:
 
       - name: Copy wheels into repo
         run: |
+          git rm -f --ignore-unmatch peptonizer_rust/dist/*.whl
           mkdir -p peptonizer_rust/dist
-          find artifacts -name "*.whl" -exec cp {} peptonizer_rust/dist/ \;
+          find artifacts -name "*.whl" -print -exec cp {} peptonizer_rust/dist/ \;
+
+          count=$(find peptonizer_rust/dist -name "*.whl" | wc -l)
+          echo "Copied $count wheel(s) into peptonizer_rust/dist"
+          if [ "$count" -ne 5 ]; then
+            echo "::error::Expected 5 wheels (one per matrix platform), found $count. Not committing a partial set."
+            exit 1
+          fi
 
       - name: Commit wheels
         run: |

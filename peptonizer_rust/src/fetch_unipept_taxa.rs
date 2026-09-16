@@ -1,6 +1,5 @@
 use crate::unipept_communicator::{get_taxa_for_peptides_async, get_descendants_for_taxa_async};
 use crate::http_client::HttpResult;
-use crate::weight_taxa::normalize_unipept_responses;
 use std::collections::{HashMap, HashSet};
 
 
@@ -20,8 +19,7 @@ use std::collections::{HashMap, HashSet};
 pub async fn fetch_peptides_and_filter_taxa(
     peptides: String,
     rank: String,
-    taxon_query: String,
-    normalize_unipept_responses_flag: bool
+    taxon_query: String
 ) -> HttpResult<String> {
     // Parse arguments
     let peptides: Vec<String> = serde_json::from_str(&peptides)?;
@@ -40,23 +38,6 @@ pub async fn fetch_peptides_and_filter_taxa(
         taxa_list.retain(|taxon| taxa_filter.contains(taxon));
     }
 
-    if normalize_unipept_responses_flag {
-        // Keep key order stable while normalizing taxa vectors in bulk.
-        let peptide_keys: Vec<String> = peptides_taxa.keys().cloned().collect();
-        let mut taxa_vectors: Vec<Vec<usize>> = peptide_keys
-            .iter()
-            .filter_map(|peptide| peptides_taxa.get(peptide).cloned())
-            .collect();
-
-        normalize_unipept_responses(&mut taxa_vectors, &rank)
-            .await
-            .map_err(|e| format!("Failed to normalize Unipept responses: {e}"))?;
-
-        for (peptide, normalized_taxa) in peptide_keys.into_iter().zip(taxa_vectors.into_iter()) {
-            peptides_taxa.insert(peptide, normalized_taxa);
-        }
-    }
-
     Ok(serde_json::to_string(&peptides_taxa)?)
 }
 
@@ -72,7 +53,7 @@ mod tests {
 
         let taxon_query = serde_json::to_string(&vec![2]).unwrap();
 
-        let result = fetch_peptides_and_filter_taxa(peptides, "species".to_string(), taxon_query, true).await;
+        let result = fetch_peptides_and_filter_taxa(peptides, "species".to_string(), taxon_query).await;
         assert!(result.is_ok());
         let result = result.unwrap();
 
@@ -87,7 +68,7 @@ mod tests {
         let peptides = "[]".to_string();
         let taxon_query = "[]".to_string();
 
-        let result = fetch_peptides_and_filter_taxa(peptides, "species".to_string(), taxon_query, true).await;
+        let result = fetch_peptides_and_filter_taxa(peptides, "species".to_string(), taxon_query).await;
         assert!(result.is_ok());
         let result = result.unwrap();
 

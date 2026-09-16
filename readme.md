@@ -19,7 +19,7 @@
 <h3 align="center">The Peptonizer 2000</h3>
 
   <p align="center">
-    Integrating PepGM and Unipept for probability-based taxonomic inference of metaproteomic samples
+    Integrating PepGM and Unipept for probability-based effect inference of metaproteomic samples
     <br />
   </p>
 </div>
@@ -44,6 +44,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
+    <li><a href="#running-an-analysis-natively-without-snakemake-or-the-website">Running an analysis natively, without Snakemake or the website</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -59,7 +60,8 @@
 Introducing the Peptonizer2000 - a tool that combines the capabilities of Unipept and PepGM to analyze
 metaproteomic mass spectrometry-based samples. Originally designed for taxonomic inference of viral
 mass spectrometry-based samples, we've extended PepGM's functionality to analyze metaproteomic samples by
-retrieving taxonomic information from the Unipept database.
+retrieving taxonomic information from the Unipept database. The pipeline can also be used for other peptide-effect 
+relations, such as functional analysis.
 
 PepGM is a probabilistic graphical model developed by Tanja Holstein et al. that uses belief propagation to infer the taxonomic origin of peptides and taxa in viral samples.
 You can learn more about PepGM at [GitHub](https://github.com/BAMeScience/PepGM) page.
@@ -76,15 +78,15 @@ The Peptonizer2000 workflow is comprised of the following steps:
 
 1. Query all identified peptides, provided by the user in a .tsv file, in the Unipept API,
    and restrict the taxonomic range queried based on any prior knowledge of the sample.
-2. Assemble the peptide-taxon associations provided by Unipept into a bipartite graph,
-   where peptides and taxa are represented by different nodes, and an edge is drawn between a peptide and a taxon
-   if the peptide is part of the taxon's proteome.
+2. Assemble the peptide-effect associations provided by Unipept into a bipartite graph,
+   where peptides and effects are represented by different nodes, and an edge is drawn between a peptide and a effect
+   if they are related.
 3. Transform the bipartite graph into a factor graph using convolution trees and conditional probability table
    factors (CPD).
 4. Run the belief propagation algorithm multiple times with different sets of CPD parameters until convergence,
-   to obtain posterior probabilities of candidate taxa.
+   to obtain posterior probabilities of candidate effects.
 5. Use an empirically deduced metric to determine the ideal graph parameter set.
-6. Output the top scoring taxa as a results barchart. The results are also available as comma-separated files
+6. Output the top scoring effects as a results barchart. The results are also available as comma-separated files
    for further downstream analysis or visualizations.
 
 
@@ -209,18 +211,18 @@ Do not change the config file location.
 
    <details > <summary> Analysis specific parameter </summary>
    <ul>
-      <li>taxa_in_graph: # of inferred taxa that appear in the barplot that is created of the results csv</li>
-      <li>taxa_in_plot: number of taxa reported in bar plot</li>
+      <li>effects_in_graph: # of inferred effects that appear in the barplot that is created of the results csv</li>
+      <li>effects_in_plot: number of effects reported in bar plot</li>
       <li>alpha: grid search increments for alpha (list) </li>
       <li>beta: grid search increments for beta (list) </li>
       <li>prior: grid search increments for prior (list) </li>
-      <li>regularized: boolean. If True, the probability for the number of parents taxa of a peptide is regularized to be inversely proportional to the number of parents </li>
+      <li>regularized: boolean. If True, the probability for the number of parents effects of a peptide is regularized to be inversely proportional to the number of parents </li>
    </ul>
    </details>
    <details > <summary> UniPept query parameters </summary>
    <ul>
-       <li>taxon_rank: rank at which results will be reported </li>
-       <li>taxon_query: taxa comprised in the UniPept query. If querying all of Unipept, use 1 (list)</li>
+       <li>taxon_rank: NCBI rank at which taxonomic results will be reported </li>
+       <li>taxon_query: taxa comprised in the Unipept query. If querying all of Unipept, use 1 (list)</li>
    </ul> 
    </details>
 </details>
@@ -232,17 +234,17 @@ All Peptonizer2000 output files are saved into the results folder and include th
 Main results: <br>
 
 - peptonizer_results.csv: table with values ID, score, type (contains all taxids under 'ID' and all probabilities under 'score' <br>
-- peptonizer_results.png: bar plot of the peptonizer results showing the scores for the #'taxa_in_plot' (see config parameters) highest scoring taxa
+- peptonizer_results.png: bar plot of the peptonizer results showing the scores for the #'effects_in_plot' (see config parameters) highest scoring effects
   <br>
 
 Additional files: <br>
 - Intermediate results folders sorted by their prior value for all possible grid search parameter combinations
-- taxa_weights_dataframe.csv: csv file of all taxids that had at least one peptide map to them and their weight 
-- pepgm_graph.graphml: graphml file of the graphical model (without convolution tree factors). Useful to visualize the graph structure and peptide-taxon connections <br>
-- sequence_scores_dataframe.csv: dataframe with petides, taxa and scores used to create the graph <br>
+- effects_weights_dataframe.csv: csv file of all taxids that had at least one peptide map to them and their weight 
+- pepgm_graph.graphml: graphml file of the graphical model (without convolution tree factors). Useful to visualize the graph structure and peptide-effect connections <br>
+- sequence_scores_dataframe.csv: dataframe with petides, effects and scores used to create the graph <br>
 - best_parameter.csv: file with best parameter <br>
 - unipept_responses.json: response of unipept queries <br>
-- clustered_taxa_weights_datatframe: additional .csv file resulting from the clustering of taxa by peptidome used for rbo<br>
+- effect_cluster_heads_dataframe: additional .csv file resulting from the clustering of effects by peptidome used for rbo<br>
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -262,6 +264,84 @@ To execute a test run of the Peptonizer2000 using the provided files:
  2. In the config file, make sure to point to the test sample you want to use. By default, this is S03
  3. Start to peptonize with the command `snakemake --use-conda --cores 1`. If you have sufficient CPU and memory power available to your system, you can increase the amount of cores in order to speed up the workflow.
 
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+## Running an analysis natively, without Snakemake or the website
+
+The `peptonizer_analysis` folder provides three standalone Rust command-line tools that run the full
+Peptonizer2000 pipeline (effect weighing, factor graph construction, a belief-propagation grid search, and
+best-parameter selection) directly against TSV files, without installing Conda/Snakemake and without a browser.
+You supply the peptide-effect relationships yourself, rather than starting from a raw peptide list — `protein_inference`
+and `functional_analysis` then make no Unipept queries at all, since protein and function IDs are used as-is:
+
+- `taxonomic_analysis` — infers taxonomic origin from peptide-to-taxon relationships (taxon IDs are normalized
+  to species rank before weighing via a Unipept API call, so this tool needs network access)
+- `protein_inference` — infers the source protein from peptide-to-protein relationships (no Unipept queries)
+- `functional_analysis` — infers functional annotations from peptide-to-function relationships (no Unipept
+  queries)
+
+### Building
+
+```bash
+cd peptonizer_analysis
+cargo build --release
+```
+
+The compiled binaries are written to `target/release/`.
+
+### Input files
+
+Each tool takes three tab-separated files with **no header row**:
+
+| File | Flag | Columns |
+|---|---|---|
+| Relationships | `--peptide-taxa` / `--peptide-proteins` / `--peptide-functions` | `peptide`, `id` (an integer taxon/function ID, or a protein name for `--peptide-proteins`) |
+| Scores | `--peptide-scores` | `peptide`, `score` (a float, e.g. from your search engine) |
+| Counts | `--peptide-counts` | `peptide`, `count` (an integer PSM count) |
+
+A peptide can appear on multiple rows of the relationships file to associate it with more than one ID.
+
+### Usage
+
+```bash
+./target/release/taxonomic_analysis \
+  --peptide-taxa peptide_taxa.tsv \
+  --peptide-scores peptide_scores.tsv \
+  --peptide-counts peptide_counts.tsv \
+  --output taxonomic_analysis_results.tsv
+
+./target/release/protein_inference \
+  --peptide-proteins peptide_protein.tsv \
+  --peptide-scores peptide_scores.tsv \
+  --peptide-counts peptide_counts.tsv \
+  --output protein_inference_results.tsv
+
+./target/release/functional_analysis \
+  --peptide-functions peptide_functions.tsv \
+  --peptide-scores peptide_scores.tsv \
+  --peptide-counts peptide_counts.tsv \
+  --output functional_analysis_results.tsv
+```
+
+`--output` is optional and defaults to `<tool_name>_results.tsv` in the current directory. Run any tool with
+`--help`/`-h` for a one-line usage reminder. Unlike the Snakemake workflow's `config.yaml`, the alpha/beta/prior
+grid-search ranges are currently fixed per tool rather than user-configurable.
+
+### Output
+
+A TSV with a header row and one row per ID, sorted by descending posterior probability, e.g. for
+`taxonomic_analysis`:
+
+```
+taxon_id	probability
+2	0.98
+816	0.42
+```
+
+(`protein_id`/`function_id` for the other two tools; `protein_inference` reports the original protein name
+instead of an internal ID.)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- LICENSE -->
 ## License

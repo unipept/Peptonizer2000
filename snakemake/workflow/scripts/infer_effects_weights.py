@@ -1,15 +1,15 @@
 import argparse
 import gzip
 
-from peptonizer_rust import perform_taxa_weighing_py, parse_input_peptides_py
+from peptonizer_rust import perform_effects_weighing_py, parse_input_peptides_py
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    "--number-of-taxa",
+    "--number-of-effects",
     type=int,
     required=True,
-    help="Number of taxa to include in the final Peptonizer2000 output.",
+    help="Number of effects to include in the final Peptonizer2000 output.",
 )
 parser.add_argument(
     "--sequence-scores-dataframe-file",
@@ -18,10 +18,10 @@ parser.add_argument(
     help="Output: path to a CSV-file that will contain all computed sequence scores.",
 )
 parser.add_argument(
-    "--taxa-weights-dataframe-file",
+    "--effects-weights-dataframe-file",
     type=str,
     required=False,
-    help="Output: path to a CSV-file that will contain all computed taxa weights.",
+    help="Output: path to a CSV-file that will contain all computed effects weights.",
 )
 parser.add_argument(
     "--unipept-response-file",
@@ -29,7 +29,7 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--taxon-rank",
+    "--effect-rank",
     type=str,
     required=False,
     default="species",
@@ -56,15 +56,15 @@ unipept_responses = ""
 with open(args.unipept_response_file, "r") as file:
     unipept_responses = file.read()
 
-sequence_scores, taxa_weights = perform_taxa_weighing_py(
+sequence_scores, effects_weights = perform_effects_weighing_py(
     unipept_responses,
     pep_score,
     pep_psm_counts,
-    args.number_of_taxa,
-    args.taxon_rank
+    args.number_of_effects,
+    args.effect_rank
 )
 
 print("Started dumping produced results to CSV-files...")
-with open(args.sequence_scores_dataframe_file, 'w') as sequences_file, open(args.taxa_weights_dataframe_file, 'w') as weights_file:
+with open(args.sequence_scores_dataframe_file, 'w') as sequences_file, open(args.effects_weights_dataframe_file, 'w') as weights_file:
     sequences_file.write(sequence_scores)
-    weights_file.write(taxa_weights)
+    weights_file.write(effects_weights)

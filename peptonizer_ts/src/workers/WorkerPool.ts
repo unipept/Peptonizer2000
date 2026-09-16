@@ -1,14 +1,14 @@
 import PeptonizerWorker from './PeptonizerWorker.ts?worker&inline';
 import {
-    ClusterTaxaTaskData,
+    ClusterEffectsTaskData,
     ComputeGoodnessTaskData,
     ExecutePepgmTaskData,
-    FetchUnipeptTaxonTaskData,
+    FetchUnipeptEffectTaskData,
     GenerateGraphTaskData,
     InputEventData,
     OutputEventData,
     PepgmProgressUpdate,
-    PerformTaxaWeighingTaskData,
+    PerformEffectsWeighingTaskData,
     ResultType,
     SpecificInputEventData,
     WorkerTask
@@ -82,43 +82,46 @@ class WorkerPool {
         }, workerCount);
     }
 
-    public async fetchUnipeptTaxonInfo(peptidesScores: Map<string, number>, rank: string, taxonQuery: number[]): Promise<string> {
-        const eventData: FetchUnipeptTaxonTaskData = {
+    public async fetchUnipeptEffectInfo(peptidesScores: Map<string, number>, rank: string, effectQuery: number[]): Promise<string> {
+        const eventData: FetchUnipeptEffectTaskData = {
             peptidesScores,
             rank,
-            taxonQuery
+            effectQuery
         };
 
         return await this.queue.pushAsync({ queueInput: { task: WorkerTask.FETCH_UNIPEPT_TAXON, input: eventData }, progressListener: undefined });
     }
 
     /**
-     * Generates a CSV-file representing a dataframe with all the taxa weights required for the Peptonizer. These
-     * taxa weights will be used in a subsequent step of the Peptonizer to generate the factor graph.
+     * Generates a CSV-file representing a dataframe with all the effects weights required for the Peptonizer. These
+     * effects weights will be used in a subsequent step of the Peptonizer to generate the factor graph.
      *
-     * @param peptidesTaxa Mapping between peptides and the associated taxa. If a filtering by taxa (or another
+     * @param peptidesEffects Mapping between peptides and the associated effects. If a filtering by effects (or another
      * criterium) is required, this needs to be done before passing this mapping to this function.
      * @param peptidesScores Mapping between peptide sequences that need to be considered by the peptonizer and a
      * scoring value assigned to each sequence by prior steps (e.g. search engines).
      * @param peptidesCounts Mapping between peptide sequences and their occurrences in the input file.
-     * @param taxaInGraph How many taxa are being used in the graphical model?
-     * @return A CSV-representation of a dataframe with taxon weights.
+     * @param rank At which NCBI effect rank should the Peptonizer perform the effect inference?
+     * @param effectsInGraph How many effects are being used in the graphical model?
+     * @return A CSV-representation of a dataframe with effect weights.
      */
-    public async performTaxaWeighing(
-        peptidesTaxa: Map<string, number[]>,
+    public async performEffectsWeighing(
+        peptidesEffects: Map<string, number[]>,
         peptidesScores: Map<string, number>,
         peptidesCounts: Map<string, number>,
-        taxaInGraph: number,
+        rank: string | undefined,
+        effectsInGraph: number,
     ): Promise<[string, string]> {
         if (this.isCancelled) {
             throw new Error("Workerpool is no longer active. Cancel has been called on this pool before.");
         }
 
-        const eventData: PerformTaxaWeighingTaskData = {
-            peptidesTaxa,
+        const eventData: PerformEffectsWeighingTaskData = {
+            peptidesEffects,
             peptidesScores,
             peptidesCounts,
-            taxaInGraph
+            rank,
+            effectsInGraph
         };
 
         return await this.queue.pushAsync({ queueInput: { task: WorkerTask.PERFORM_TAXA_WEIGHING, input: eventData }, progressListener: undefined });
@@ -159,18 +162,18 @@ class WorkerPool {
         return await this.queue.pushAsync({ queueInput: { task: WorkerTask.EXECUTE_PEPGM, input: eventData }, progressListener });
     }
 
-    public async clusterTaxa(
+    public async clusterEffects(
         sequenceScoresCsv: string,
-        taxaWeightsCsv: string,
+        effectsWeightsCsv: string,
         similarityThreshold: number = 0.9
     ): Promise<string> {
         if (this.isCancelled) {
             throw new Error("Workerpool is no longer active. Cancel has been called on this pool before.");
         }
 
-        const eventData: ClusterTaxaTaskData = {
+        const eventData: ClusterEffectsTaskData = {
             sequenceScoresCsv,
-            taxaWeightsCsv,
+            effectsWeightsCsv,
             similarityThreshold
         }
 
@@ -178,7 +181,7 @@ class WorkerPool {
     }
 
     public async computeGoodness(
-        clusteredTaxaWeightsCsv: string,
+        effectClusterHeadsCsv: string,
         peptonizerResults: Map<string, number>
     ): Promise<number> {
         if (this.isCancelled) {
@@ -186,7 +189,7 @@ class WorkerPool {
         }
 
         const eventData: ComputeGoodnessTaskData = {
-            clusteredTaxaWeightsCsv,
+            effectClusterHeadsCsv,
             peptonizerResults
         };
 
@@ -225,17 +228,17 @@ class WorkerPool {
                 if (eventData.task === WorkerTask.FETCH_UNIPEPT_TAXON) {
                     resolve(eventData.output.unipeptJson)
                 } else if (eventData.task === WorkerTask.PERFORM_TAXA_WEIGHING) {
-                    resolve([eventData.output.sequenceScoresCsv, eventData.output.taxaWeightsCsv]);
+                    resolve([eventData.output.sequenceScoresCsv, eventData.output.effectsWeightsCsv]);
                 } else if (eventData.task === WorkerTask.GENERATE_GRAPH) {
                     resolve(eventData.output.factor_graph_bytes);
                 } else if (eventData.task === WorkerTask.EXECUTE_PEPGM) {
                     const peptonizerResult: PeptonizerResult = new Map();
-                    for (const [key, value] of Object.entries(JSON.parse(eventData.output.taxonScoresJson))) {
+                    for (const [key, value] of Object.entries(JSON.parse(eventData.output.effectScoresJson))) {
                         peptonizerResult.set(key, value as number);
                     }
                     resolve(peptonizerResult);
                 } else if (eventData.task === WorkerTask.CLUSTER_TAXA) {
-                    resolve(eventData.output.clusteredTaxaWeightsCsv);
+                    resolve(eventData.output.effectClusterHeadsCsv);
                 } else if (eventData.task === WorkerTask.COMPUTE_GOODNESS) {
                     resolve(eventData.output.goodness);
                 }

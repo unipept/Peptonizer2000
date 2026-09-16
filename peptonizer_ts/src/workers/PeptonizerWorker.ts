@@ -7,27 +7,27 @@
  */
 
 import {
-    ClusterTaxaTaskData,
-    ClusterTaxaTaskDataResult, ComputeGoodnessDataResult, ComputeGoodnessTaskData,
+    ClusterEffectsTaskData,
+    ClusterEffectsTaskDataResult, ComputeGoodnessDataResult, ComputeGoodnessTaskData,
     ExecutePepgmTaskData,
     ExecutePepgmTaskDataResult,
-    FetchUnipeptTaxonTaskData,
-    FetchUnipeptTaxonTaskResult,
+    FetchUnipeptEffectTaskData,
+    FetchUnipeptEffectTaskResult,
     GenerateGraphTaskData,
     GenerateGraphTaskDataResult,
     InputEventData,
     OutputEventData,
-    PerformTaxaWeighingTaskData,
-    PerformTaxaWeighingTaskResult,
+    PerformEffectsWeighingTaskData,
+    PerformEffectsWeighingTaskResult,
     ResultType,
     WorkerTask
 } from "./PeptonizerWorkerTypes.ts";
 import init, { 
-    perform_taxa_weighing_wasm, 
+    perform_effects_weighing_wasm, 
     execute_pepgm_wasm, 
     fetch_unipept_taxa_wasm, 
     generate_pepgm_graph_wasm, 
-    cluster_taxa_wasm,
+    cluster_effects_wasm,
     compute_goodness_wasm
 } from "../../pkg/peptonizer_rust.js";
 
@@ -38,33 +38,39 @@ interface DedicatedWorkerGlobalScope {
 
 declare const self: DedicatedWorkerGlobalScope & typeof globalThis;
 
-async function fetchUnipeptTaxonInformation(data: FetchUnipeptTaxonTaskData): Promise<FetchUnipeptTaxonTaskResult> {
+async function fetchUnipeptEffectInformation(data: FetchUnipeptEffectTaskData): Promise<FetchUnipeptEffectTaskResult> {
     console.time("Execution time fetching Unipept information");
     
     let score_keys = [...data.peptidesScores.keys()];
     let peptidesScores = JSON.stringify(score_keys);
-    let taxonQuery = JSON.stringify(data.taxonQuery);
+    let effectQuery = JSON.stringify(data.effectQuery);
 
-    const unipeptJson = await fetch_unipept_taxa_wasm(peptidesScores, data.rank, taxonQuery);
+    const unipeptJson = await fetch_unipept_taxa_wasm(peptidesScores, data.rank, effectQuery);
     
     console.timeEnd("Execution time fetching Unipept information");
 
     return { unipeptJson };
 }
 
-async function performTaxaWeighing(data: PerformTaxaWeighingTaskData): Promise<PerformTaxaWeighingTaskResult> {
-    console.time("Execution time taxa weiging");
+async function performEffectsWeighing(data: PerformEffectsWeighingTaskData): Promise<PerformEffectsWeighingTaskResult> {
+    console.time("Execution time effects weiging");
     
-    let peptidesTaxa = JSON.stringify(Object.fromEntries(data.peptidesTaxa));
+    let peptidesEffects = JSON.stringify(Object.fromEntries(data.peptidesEffects));
     let peptidesScores = JSON.stringify(Object.fromEntries(data.peptidesScores));
     let peptidesCounts = JSON.stringify(Object.fromEntries(data.peptidesCounts));
 
-    const [sequenceScoresCsv, taxaWeightsCsv] = await perform_taxa_weighing_wasm(peptidesTaxa, peptidesScores, peptidesCounts, data.taxaInGraph);
+    const [sequenceScoresCsv, effectsWeightsCsv] = await perform_effects_weighing_wasm(
+        peptidesEffects,
+        peptidesScores,
+        peptidesCounts,
+        data.effectsInGraph,
+        data.rank
+    );
 
-    console.timeEnd("Execution time taxa weiging");
+    console.timeEnd("Execution time effects weiging");
     return {
         sequenceScoresCsv,
-        taxaWeightsCsv
+        effectsWeightsCsv
     };
 
     
@@ -86,22 +92,22 @@ async function generateGraph(data: GenerateGraphTaskData): Promise<GenerateGraph
 async function executePepgm(data: ExecutePepgmTaskData): Promise<ExecutePepgmTaskDataResult> {
     console.time("Execution time Nori");
 
-    const taxonScoresJson = execute_pepgm_wasm(data.factor_graph_bytes, data.alpha, data.beta, true, data.prior);
+    const effectScoresJson = execute_pepgm_wasm(data.factor_graph_bytes, data.alpha, data.beta, true, data.prior);
 
     console.timeEnd("Execution time Nori");
     return {
-        taxonScoresJson
+        effectScoresJson
     };
 }
 
-async function clusterTaxa(data: ClusterTaxaTaskData): Promise<ClusterTaxaTaskDataResult> {
-    console.time("Execution time clustering taxa");
+async function clusterEffects(data: ClusterEffectsTaskData): Promise<ClusterEffectsTaskDataResult> {
+    console.time("Execution time clustering effects");
 
-    const clusteredTaxaWeightsCsv = cluster_taxa_wasm(data.sequenceScoresCsv, data.taxaWeightsCsv, data.similarityThreshold)
+    const effectClusterHeadsCsv = cluster_effects_wasm(data.sequenceScoresCsv, data.effectsWeightsCsv, data.similarityThreshold)
 
-    console.timeEnd("Execution time clustering taxa");
+    console.timeEnd("Execution time clustering effects");
     return {
-        clusteredTaxaWeightsCsv
+        effectClusterHeadsCsv
     };
 }
 
@@ -109,7 +115,7 @@ async function computeGoodness(data: ComputeGoodnessTaskData): Promise<ComputeGo
     console.time("Execution time computing goodness");
     
     let peptonizerResults = JSON.stringify(Object.fromEntries(data.peptonizerResults));
-    const goodness = compute_goodness_wasm(data.clusteredTaxaWeightsCsv, peptonizerResults);
+    const goodness = compute_goodness_wasm(data.effectClusterHeadsCsv, peptonizerResults);
 
     console.timeEnd("Execution time computing goodness");
     return {
@@ -146,18 +152,18 @@ self.onmessage = async (event: MessageEvent<InputEventData>): Promise<void> => {
         // Destructure the data from the event
         const eventData = event.data;
 
-        let output: FetchUnipeptTaxonTaskResult | PerformTaxaWeighingTaskResult | GenerateGraphTaskDataResult | ExecutePepgmTaskDataResult | ClusterTaxaTaskDataResult | ComputeGoodnessDataResult | undefined;
+        let output: FetchUnipeptEffectTaskResult | PerformEffectsWeighingTaskResult | GenerateGraphTaskDataResult | ExecutePepgmTaskDataResult | ClusterEffectsTaskDataResult | ComputeGoodnessDataResult | undefined;
 
         if (eventData.task === WorkerTask.FETCH_UNIPEPT_TAXON) {
-            output = await fetchUnipeptTaxonInformation(eventData.input);
+            output = await fetchUnipeptEffectInformation(eventData.input);
         } else if (eventData.task === WorkerTask.PERFORM_TAXA_WEIGHING) {
-            output = await performTaxaWeighing(eventData.input);
+            output = await performEffectsWeighing(eventData.input);
         } else if (eventData.task === WorkerTask.GENERATE_GRAPH) {
             output = await generateGraph(eventData.input);
         } else if (eventData.task === WorkerTask.EXECUTE_PEPGM) {
             output = await executePepgm(eventData.input);
         } else if (eventData.task === WorkerTask.CLUSTER_TAXA) {
-            output = await clusterTaxa(eventData.input);
+            output = await clusterEffects(eventData.input);
         } else if (eventData.task === WorkerTask.COMPUTE_GOODNESS) {
             output = await computeGoodness(eventData.input);
         } else {

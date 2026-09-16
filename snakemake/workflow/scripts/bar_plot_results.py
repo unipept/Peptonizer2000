@@ -9,10 +9,10 @@ from peptonizer_rust import get_names_for_taxa_py
 
 """
 Script that takes PepGM .json output, translates taxIDS to scientific names, and barplots the *number of results* highest
-scoring taxa.
+scoring effects.
 """
 
-def plot_peptonizer_results(input_file: str, output_file: str, number_of_taxa: int = 25):
+def plot_peptonizer_results(input_file: str, output_file: str, number_of_effects: int = 25):
     """
     Read the results of a Peptonizer run from a JSON-file (denoted by the input_file argument) and write bar charts
     representing these results to a PNG-file.
@@ -23,37 +23,37 @@ def plot_peptonizer_results(input_file: str, output_file: str, number_of_taxa: i
     # Read JSON file
     with open(input_file, "r") as f:
         data = json.load(f)
-    taxon_scores: Dict[int, float] = {
+    effect_scores: Dict[int, float] = {
         int(k): float(v)
         for k, v in data.items()
     }
 
-    # Get top N taxa by score
-    top_taxa = sorted(
-        taxon_scores.items(),
+    # Get top N effects by score
+    top_effects = sorted(
+        effect_scores.items(),
         key=lambda x: x[1],
         reverse=True
-    )[:number_of_taxa]
-    taxon_ids = [taxon_id for taxon_id, _ in top_taxa]
-    taxon_scores = [score for _, score in top_taxa]
-    taxon_names_dict = json.loads(get_names_for_taxa_py(taxon_ids))
-    taxon_names_dict: Dict[int, str] = {
+    )[:number_of_effects]
+    effect_ids = [effect_id for effect_id, _ in top_effects]
+    effect_scores = [score for _, score in top_effects]
+    effect_names_dict = json.loads(get_names_for_taxa_py(effect_ids))
+    effect_names_dict: Dict[int, str] = {
         int(k): str(v)
-        for k, v in taxon_names_dict.items()
+        for k, v in effect_names_dict.items()
     }
-    taxon_names = [taxon_names_dict[taxon_id] for taxon_id in taxon_ids]
+    effect_names = [effect_names_dict[effect_id] for effect_id in effect_ids]
 
     # make the barplot
     fig, ax = plt.subplots()
     fig.set_size_inches(30, 15)
     bars = ax.barh(
-        range(len(taxon_names)),
-        taxon_scores,
+        range(len(effect_names)),
+        effect_scores,
         color="#283593",
     )
 
-    ax.set_yticks(range(len(taxon_names)))
-    ax.set_yticklabels(taxon_names, fontsize=24, color="#283593", fontweight="bold")
+    ax.set_yticks(range(len(effect_names)))
+    ax.set_yticklabels(effect_names, fontsize=24, color="#283593", fontweight="bold")
     ax.tick_params(axis='y', which='major', pad=15)
     plt.xlim((0, 1))
     plt.xlabel("Probability score", fontsize=35, fontweight="bold")
@@ -81,7 +81,7 @@ parser.add_argument(
     "--number-of-results",
     type=int,
     default=12,
-    help="How many taxa you want to show up on the results plot.",
+    help="How many effects you want to show up on the results plot.",
 )
 parser.add_argument(
     "--out",

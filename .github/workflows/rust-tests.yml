@@ -10,9 +10,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        crate:
+          - peptonizer_rust
+          - peptonizer_analysis
+
     defaults:
       run:
-        working-directory: peptonizer_rust
+        working-directory: ${{ matrix.crate }}
 
     steps:
       - uses: actions/checkout@v4

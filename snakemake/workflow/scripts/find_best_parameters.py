@@ -11,10 +11,10 @@ parser = argparse.ArgumentParser()
 
 
 parser.add_argument(
-    "--taxa-weights-dataframe-file",
+    "--effect-cluster-heads-file",
     type=str,
     required=True,
-    help="Input: path to a CSV-file that contains all computed taxa weights.",
+    help="Input: path to a CSV-file that contains effect cluster heads.",
 )
 parser.add_argument(
     "--results-folder",
@@ -68,10 +68,10 @@ def extract_parameters(filename):
     else:
         raise ValueError("The filename does not contain valid 'a', 'b', and 'p' parameters.")
 
-# Get all the taxa weights that are required to compute the goodness metric for each results file
-taxide_weights = ""
-with open(args.taxa_weights_dataframe_file, 'r') as taxid_weights_file:
-    taxid_weights = taxid_weights_file.read()
+# Get all effect cluster heads required to compute the goodness metric for each results file
+effect_cluster_heads_csv = ""
+with open(args.effect_cluster_heads_file, 'r') as effect_cluster_heads_file:
+    effect_cluster_heads_csv = effect_cluster_heads_file.read()
 
 # Store all result dataframes and the corresponding parameter sets in this list that will be used to finally find the
 # best parameter set.
@@ -81,7 +81,7 @@ for result_file in find_json_files(args.results_folder):
     alpha, beta, prior = extract_parameters(result_file)
     with open(result_file, "r") as f:
         peptonizer_result = f.read()
-        goodness = compute_goodness_py(taxid_weights, peptonizer_result)
+        goodness = compute_goodness_py(effect_cluster_heads_csv, peptonizer_result)
         if goodness > best_goodness:
             best_goodness = goodness
             best_param_set = (alpha, beta, prior)
@@ -95,10 +95,10 @@ with open(args.best_params_file, "w") as f:
 # Clean the CSV for the best parameters and write it to the final output directory
 best_json_path = path.join(args.results_folder, f"prior{prior}", f"pepgm_results_a{alpha}_b{beta}_p{prior}.json")
 with open(best_json_path, "r") as in_file:
-    clean_taxa_json = clean_csv_py(in_file.read())
+    clean_effects_json = clean_csv_py(in_file.read())
 
     with open(args.best_params_json, "w") as out_file:
-        out_file.write(clean_taxa_json)
+        out_file.write(clean_effects_json)
 
 # Copy the plots with the best parameters to the final output directory
 shutil.copy(
