@@ -75,7 +75,13 @@ jobs:
           for w in dist/*.whl; do
             echo "=== $w ==="
             unzip -l "$w"
-            unzip -p "$w" '*.so' '*.pyd' 2>/dev/null | strings -a | grep -o "cluster_effects_py\|cluster_taxa_py" | sort -u
+            member=$(unzip -Z1 "$w" | grep -E '\.(so|pyd)$' || true)
+            if [ -n "$member" ]; then
+              echo "binary member: $member"
+              unzip -p "$w" "$member" | strings -a | grep -o "cluster_effects_py\|cluster_taxa_py" | sort -u || echo "NEITHER SYMBOL FOUND"
+            else
+              echo "no .so/.pyd member found in wheel"
+            fi
           done
         shell: bash
 
