@@ -275,7 +275,7 @@ mod tests {
         let pep_scores_json = r#"{"PEP1":0.8,"PEP2":0.5}"#.to_string();
         let pep_psm_counts_json = r#"{"PEP1":4,"PEP2":2}"#.to_string();
         let max_effects = 10;
-        let effects_rank = Some("species".to_string());
+        let effects_rank = None;
 
         let csvs = perform_effects_weighing(
             pep_effects_json,
