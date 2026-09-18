@@ -17,7 +17,7 @@ petgraph = { version = "0.6", features = ["serde-1"] }
 minidom = "0.15"
 rustfft = { version = "6.2.0", features = ["wasm_simd"] }
 console_error_panic_hook = "0.1"
-rand = "0.8"
+rand = "0.10"
 priority-queue = "2.7.0"
 ordered-float = "4.2"
 fast-math = "0.1"
