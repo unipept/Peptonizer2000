@@ -94,7 +94,7 @@ pub async fn perform_taxa_weighing(
     let scaled_weight = log_weights.clone();
 
     let mut tax_id_weights: HashMap<usize, f32> = HashMap::new();
-    for (ids, weight) in higher_taxa.clone().into_iter().zip(scaled_weight.clone().into_iter()) {
+    for (ids, weight) in higher_taxa.clone().into_iter().zip(scaled_weight.clone()) {
         for id in ids {
             *tax_id_weights.entry(id).or_insert(0.0) += weight;
         }

@@ -52,7 +52,7 @@ pub async fn fetch_peptides_and_filter_taxa(
             .await
             .map_err(|e| format!("Failed to normalize Unipept responses: {e}"))?;
 
-        for (peptide, normalized_taxa) in peptide_keys.into_iter().zip(taxa_vectors.into_iter()) {
+        for (peptide, normalized_taxa) in peptide_keys.into_iter().zip(taxa_vectors) {
             peptides_taxa.insert(peptide, normalized_taxa);
         }
     }
