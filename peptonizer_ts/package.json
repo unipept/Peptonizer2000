@@ -22,7 +22,8 @@
     "dev": "vite --host",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepublishOnly": "cp ../LICENSE.md ./LICENSE.md"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

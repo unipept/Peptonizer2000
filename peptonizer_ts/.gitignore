@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# copied in from the repo root by the prepublishOnly script
+LICENSE.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
