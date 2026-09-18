@@ -3,9 +3,11 @@ name: Build Wheels
 on:
   push:
     branches:
-      - '**'
-    paths-ignore:
-      - 'peptonizer_rust/dist/**'
+      - master
+    paths:
+      - 'peptonizer_rust/**'
+      - '!peptonizer_rust/dist/**'
+      - '.github/workflows/wheels.yml'
 
   workflow_dispatch:
 

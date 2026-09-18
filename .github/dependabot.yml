@@ -2,6 +2,7 @@ version: 2
 updates:
 - package-ecosystem: npm
   directory: "/peptonizer_ts"
+  target-branch: development
   schedule:
     interval: monthly
     time: "13:00"
@@ -9,6 +10,7 @@ updates:
   open-pull-requests-limit: 99
 - package-ecosystem: cargo
   directory: "/peptonizer_rust"
+  target-branch: development
   schedule:
     interval: monthly
     time: "13:00"
@@ -16,6 +18,7 @@ updates:
   open-pull-requests-limit: 99
 - package-ecosystem: github-actions
   directory: "/"
+  target-branch: development
   schedule:
     interval: monthly
     time: "13:00"
