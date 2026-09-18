@@ -1,0 +1,23 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/peptonizer_ts"
+  schedule:
+    interval: monthly
+    time: "13:00"
+    timezone: Europe/Brussels
+  open-pull-requests-limit: 99
+- package-ecosystem: cargo
+  directory: "/peptonizer_rust"
+  schedule:
+    interval: monthly
+    time: "13:00"
+    timezone: Europe/Brussels
+  open-pull-requests-limit: 99
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: monthly
+    time: "13:00"
+    timezone: Europe/Brussels
+  open-pull-requests-limit: 99
