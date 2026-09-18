@@ -1,0 +1,51 @@
+name: Publish npm package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish peptonizer to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'v0.13.1'
+
+      - name: Build WASM package
+        working-directory: peptonizer_rust
+        run: wasm-pack build --target web --out-dir ../peptonizer_ts/pkg
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: peptonizer_ts/package-lock.json
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        working-directory: peptonizer_ts
+        run: npm ci
+
+      - name: Lint
+        working-directory: peptonizer_ts
+        run: npm run lint
+
+      - name: Build
+        working-directory: peptonizer_ts
+        run: npm run build
+
+      - name: Publish to npm
+        working-directory: peptonizer_ts
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,12 +1,22 @@
 {
   "name": "peptonizer",
-  "private": true,
   "version": "0.1.11",
+  "description": "Infers the taxonomic or functional origin of peptides from metaproteomic mass-spectrometry samples, combining PepGM with Unipept.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unipept/Peptonizer2000.git",
+    "directory": "peptonizer_ts"
+  },
+  "bugs": {
+    "url": "https://github.com/unipept/Peptonizer2000/issues"
+  },
   "type": "module",
   "types": "dist/types.d.ts",
   "files": [
     "dist"
   ],
+  "main": "./dist/peptonizer.js",
   "module": "./dist/peptonizer.js",
   "scripts": {
     "dev": "vite --host",
