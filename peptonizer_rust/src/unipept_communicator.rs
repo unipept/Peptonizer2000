@@ -381,7 +381,7 @@ mod tests {
         assert_eq!(parsed[0].get("taxon_id"), Some(&Some(1)));
         assert_eq!(parsed[0].get("species_id"), Some(&Some(9606)));
         assert_eq!(parsed[0].get("genus_id"), Some(&None));
-        assert!(parsed[0].get("name").is_none());
+        assert!(!parsed[0].contains_key("name"));
         assert_eq!(parsed[1].get("taxon_id"), Some(&Some(2)));
         assert_eq!(parsed[1].get("genus_id"), Some(&Some(9605)));
     }

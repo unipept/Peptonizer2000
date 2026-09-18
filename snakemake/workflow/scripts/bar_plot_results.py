@@ -1,10 +1,9 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import json
 import argparse
+import json
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 from peptonizer_rust import get_names_for_taxa_py
 
 """
@@ -23,7 +22,7 @@ def plot_peptonizer_results(input_file: str, output_file: str, number_of_taxa: i
     # Read JSON file
     with open(input_file, "r") as f:
         data = json.load(f)
-    taxon_scores: Dict[int, float] = {
+    taxon_scores: dict[int, float] = {
         int(k): float(v)
         for k, v in data.items()
     }
@@ -37,7 +36,7 @@ def plot_peptonizer_results(input_file: str, output_file: str, number_of_taxa: i
     taxon_ids = [taxon_id for taxon_id, _ in top_taxa]
     taxon_scores = [score for _, score in top_taxa]
     taxon_names_dict = json.loads(get_names_for_taxa_py(taxon_ids))
-    taxon_names_dict: Dict[int, str] = {
+    taxon_names_dict: dict[int, str] = {
         int(k): str(v)
         for k, v in taxon_names_dict.items()
     }

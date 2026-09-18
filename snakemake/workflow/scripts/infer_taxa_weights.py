@@ -1,7 +1,6 @@
 import argparse
-import gzip
 
-from peptonizer_rust import perform_taxa_weighing_py, parse_input_peptides_py
+from peptonizer_rust import parse_input_peptides_py, perform_taxa_weighing_py
 
 parser = argparse.ArgumentParser()
 

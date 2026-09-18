@@ -180,8 +180,7 @@ const startToPeptonize = async function() {
     const [peptidesScores, peptidesCounts] = PeptonizerInputParser.parse(fileContents);
 
     try {
-        
-        let workerPool = new WorkerPool(1);
+        const workerPool = new WorkerPool(1);
         const rank: string = "species";
         const taxonQuery: number[] = [2, 3];
         const peptidesTaxaString = await workerPool.fetchUnipeptTaxonInfo(peptidesScores, rank, taxonQuery);
@@ -213,7 +212,7 @@ const startToPeptonize = async function() {
         const entries = Array.from(peptonizerResult.entries()).map(
             ([key, value]) => [key, parseFloat(value.toFixed(2))]
         );
-        // @ts-ignore
+        // @ts-expect-error -- entries is (string | number)[][], but values here are always numbers after mapping
         const sortedEntries = entries.sort((a, b) => b[1] - a[1]);
 
         // Extract keys and values from the sorted entries
@@ -221,7 +220,7 @@ const startToPeptonize = async function() {
         const values = sortedEntries.map(entry => entry[1]); // Sorted values
 
         // Render the chart with Highcharts
-        // @ts-ignore
+        // @ts-expect-error -- Highcharts is loaded globally via a <script> tag, not imported
         Highcharts.chart('peptonizer-chart', {
             chart: {
                 type: 'bar'

@@ -129,8 +129,6 @@ class Peptonizer {
             progressListener?.peptonizerFinished();
 
             return bestResult;
-        } catch (error) {
-            throw error;
         } finally {
             this.workerPool.close();
         }
