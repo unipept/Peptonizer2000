@@ -52,6 +52,7 @@ class WorkerPool {
                 );
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- queue result type varies per task, narrowed by each public method's return type
             const result = await new Promise<any>((resolve, reject) => {
                 worker.onmessage = this.handleWorkerMessages(resolve, reject, queueData.progressListener);
 
@@ -214,7 +215,9 @@ class WorkerPool {
      * @private
      */
     private handleWorkerMessages(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- resolves with whichever task-specific output type the caller expects
         resolve: (x: any) => void,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- standard Promise executor reject signature
         reject: (reason?: any) => void,
         progressListener?: PeptonizerProgressListener
     ): (event: MessageEvent<OutputEventData>) => void {

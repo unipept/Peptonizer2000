@@ -2,7 +2,6 @@ import argparse
 
 from peptonizer_rust import generate_pepgm_graph_py
 
-
 parser = argparse.ArgumentParser(
     description="Run the PepGM algorithm from command line"
 )

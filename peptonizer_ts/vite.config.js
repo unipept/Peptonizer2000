@@ -10,7 +10,7 @@ export default defineConfig({
     },
     build: {
         lib: {
-            entry: path.resolve(__dirname, 'src/index.ts'), // Change this to your library's entry point
+            entry: path.resolve(import.meta.dirname, 'src/index.ts'), // Change this to your library's entry point
             name: 'Peptonizer', // The global variable name for IIFE/UMD builds
             formats: ['es'], // Switch to ESM format,
             filename: "peptonizer.js"

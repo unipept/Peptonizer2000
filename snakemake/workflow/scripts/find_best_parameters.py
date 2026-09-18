@@ -1,11 +1,10 @@
 import argparse
 import os
-import pandas as pd
 import re
 import shutil
 from os import path
 
-from peptonizer_rust import compute_goodness_py, clean_csv_py
+from peptonizer_rust import clean_csv_py, compute_goodness_py
 
 parser = argparse.ArgumentParser()
 

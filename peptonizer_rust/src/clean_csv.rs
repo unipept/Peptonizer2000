@@ -32,10 +32,10 @@ pub async fn clean_csv(csv_content: String) -> HttpResult<String> {
 
     for result in rdr.deserialize() {
         let record: Row = result?;
-        if record.row_type == "taxon" {
-            if let (Ok(id), Ok(score)) = (record.id.parse::<usize>(), record.score.parse::<f32>()) {
-                tax_ids.push((id, score));
-            }
+        if record.row_type == "taxon"
+            && let (Ok(id), Ok(score)) = (record.id.parse::<usize>(), record.score.parse::<f32>())
+        {
+            tax_ids.push((id, score));
         }
     }
 
