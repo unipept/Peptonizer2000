@@ -19,7 +19,7 @@ rustfft = { version = "6.2.0", features = ["wasm_simd"] }
 console_error_panic_hook = "0.1"
 rand = "0.8"
 priority-queue = "2.7.0"
-ordered-float = "4.2"
+ordered-float = "5.5"
 fast-math = "0.1"
 nori_inference = "1.0.1"
 
