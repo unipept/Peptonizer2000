@@ -23,7 +23,7 @@
     "vite-plugin-wasm": "^3.6.0"
   },
   "dependencies": {
-    "@types/async": "^3.2.24",
+    "@types/async": "^3.2.26",
     "async": "^3.2.6",
     "rollup-plugin-dts": "^6.1.1",
     "vite-plugin-dts": "^4.5.3"
