@@ -141,8 +141,6 @@ class Peptonizer {
             // Notify any listeners that the Peptonizer did start running (and report which set of parameters will be tuned)
             progressListener?.peptonizerStarted(parameterSets.length, parameterSets);
 
-            // const unipept_json = await this.workerPool.fetchUnipeptEffectInfo(peptidesScores, rank, effectQuery);
-
             const effectWeighingResult = await this.workerPool.performEffectsWeighing(
                 peptidesEffects,
                 peptidesScores,
