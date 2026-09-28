@@ -1,10 +1,6 @@
 import argparse
 
-<<<<<<< HEAD:snakemake/workflow/scripts/infer_effects_weights.py
 from peptonizer_rust import perform_effects_weighing_py, parse_input_peptides_py
-=======
-from peptonizer_rust import parse_input_peptides_py, perform_taxa_weighing_py
->>>>>>> master:snakemake/workflow/scripts/infer_taxa_weights.py
 
 parser = argparse.ArgumentParser()
 
