@@ -18,7 +18,7 @@ impl HttpClient {
         }
     }
 
-    pub fn perform_post_request<'a>(&'a self, url: String, payload_json: String) -> HttpFuture<'a> {
+    pub fn perform_post_request(&self, url: String, payload_json: String) -> HttpFuture<'_> {
         Box::pin(async move {
             #[cfg(target_arch = "wasm32")]
             {

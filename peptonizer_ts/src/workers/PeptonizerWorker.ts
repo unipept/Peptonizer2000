@@ -41,9 +41,9 @@ declare const self: DedicatedWorkerGlobalScope & typeof globalThis;
 async function fetchUnipeptEffectInformation(data: FetchUnipeptEffectTaskData): Promise<FetchUnipeptEffectTaskResult> {
     console.time("Execution time fetching Unipept information");
     
-    let score_keys = [...data.peptidesScores.keys()];
-    let peptidesScores = JSON.stringify(score_keys);
-    let effectQuery = JSON.stringify(data.effectQuery);
+    const score_keys = [...data.peptidesScores.keys()];
+    const peptidesScores = JSON.stringify(score_keys);
+    const effectQuery = JSON.stringify(data.effectQuery);
 
     const unipeptJson = await fetch_unipept_taxa_wasm(peptidesScores, data.rank, effectQuery);
     
@@ -55,9 +55,9 @@ async function fetchUnipeptEffectInformation(data: FetchUnipeptEffectTaskData): 
 async function performEffectsWeighing(data: PerformEffectsWeighingTaskData): Promise<PerformEffectsWeighingTaskResult> {
     console.time("Execution time effects weiging");
     
-    let peptidesEffects = JSON.stringify(Object.fromEntries(data.peptidesEffects));
-    let peptidesScores = JSON.stringify(Object.fromEntries(data.peptidesScores));
-    let peptidesCounts = JSON.stringify(Object.fromEntries(data.peptidesCounts));
+    const peptidesEffects = JSON.stringify(Object.fromEntries(data.peptidesEffects));
+    const peptidesScores = JSON.stringify(Object.fromEntries(data.peptidesScores));
+    const peptidesCounts = JSON.stringify(Object.fromEntries(data.peptidesCounts));
 
     const [sequenceScoresCsv, effectsWeightsCsv] = await perform_effects_weighing_wasm(
         peptidesEffects,
@@ -114,7 +114,7 @@ async function clusterEffects(data: ClusterEffectsTaskData): Promise<ClusterEffe
 async function computeGoodness(data: ComputeGoodnessTaskData): Promise<ComputeGoodnessDataResult> {
     console.time("Execution time computing goodness");
     
-    let peptonizerResults = JSON.stringify(Object.fromEntries(data.peptonizerResults));
+    const peptonizerResults = JSON.stringify(Object.fromEntries(data.peptonizerResults));
     const goodness = compute_goodness_wasm(data.effectClusterHeadsCsv, peptonizerResults);
 
     console.timeEnd("Execution time computing goodness");
@@ -180,11 +180,11 @@ self.onmessage = async (event: MessageEvent<InputEventData>): Promise<void> => {
             task: eventData.task,
             output
         });
-    } catch (error: any) {
+    } catch (error) {
         self.postMessage({
             resultType: ResultType.FAILED,
             workerId: event.data.workerId,
-            error: error.toString()
+            error: String(error)
         });
     }
 };

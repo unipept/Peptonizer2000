@@ -1,8 +1,6 @@
 import argparse
-import json
 
 from peptonizer_rust import fetch_unipept_taxa_py, parse_unique_peptides_py
-
 
 parser = argparse.ArgumentParser()
 

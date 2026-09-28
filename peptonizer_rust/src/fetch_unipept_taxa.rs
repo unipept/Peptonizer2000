@@ -9,7 +9,6 @@ use std::collections::{HashMap, HashSet};
 /// * `peptides` - JSON string of peptide sequences.
 /// * `rank` - Taxonomic rank used for filtering (e.g. "species").
 /// * `taxon_query` - JSON string of taxon IDs to filter against.
-/// * `normalize_unipept_responses_flag` - Whether fetched taxa should be normalized to `rank`.
 ///
 /// # Returns
 /// JSON string mapping peptides to filtered taxon IDs.

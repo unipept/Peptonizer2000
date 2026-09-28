@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn test_heavy_weight_bias() {
         let weights = vec![1000.0, 0.0001, 0.0001];
-        let mut counts = vec![0; 3];
+        let mut counts = [0; 3];
 
         for _ in 0..100 {
             let s = select_random_samples_with_weights(weights.clone(), 1);
