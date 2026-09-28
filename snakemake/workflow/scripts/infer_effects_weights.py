@@ -1,6 +1,6 @@
 import argparse
 
-from peptonizer_rust import perform_effects_weighing_py, parse_input_peptides_py
+from peptonizer_rust import parse_input_peptides_py, perform_effects_weighing_py
 
 parser = argparse.ArgumentParser()
 

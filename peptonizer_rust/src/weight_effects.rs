@@ -116,7 +116,7 @@ pub async fn perform_effects_weighing_typed(
     let peptide_scaled_weight = peptide_log_weights.clone();
 
     let mut effect_weights: HashMap<usize, f32> = HashMap::new();
-    for (ids, weight) in effects.clone().into_iter().zip(peptide_scaled_weight.clone().into_iter()) {
+    for (ids, weight) in effects.clone().into_iter().zip(peptide_scaled_weight.clone()) {
         for id in ids {
             *effect_weights.entry(id).or_insert(0.0) += weight;
         }
