@@ -21,7 +21,7 @@ rand = "0.8"
 priority-queue = "2.7.0"
 ordered-float = "4.2"
 fast-math = "0.1"
-nori_inference = "1.0.1"
+nori_inference = "1.0.2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
