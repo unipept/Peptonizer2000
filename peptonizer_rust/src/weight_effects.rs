@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use crate::utils::log;
 use crate::random::select_random_samples_with_weights;
 use csv::Writer;
 use crate::unipept_communicator::get_unique_lineage_at_specified_rank_async;
@@ -26,7 +25,6 @@ pub async fn perform_effects_weighing(
     max_effects: usize,
     effects_rank: Option<String>
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
-    log("Parsing Unipept responses from disk...");
     let peptide_effects: HashMap<String, Vec<usize>> = serde_json::from_str(&pep_effects)?;
     let peptide_scores_map: HashMap<String, f32> = serde_json::from_str(&pep_scores)?;
     let peptide_counts_map: HashMap<String, usize> = serde_json::from_str(&pep_psm_counts)?;
@@ -63,16 +61,9 @@ pub async fn perform_effects_weighing_typed(
     let mut effects: Vec<Vec<usize>> = peptide_effects.into_values().collect();
 
     if let Some(ref rank) = effects_rank {
-        log("Started mapping all effect ids to the specified rank...");
         normalize_unipept_responses(&mut effects, rank).await?;
-    } else {
-        log("Skipping rank normalization because no rank was provided...");
     }
     let chosen_effects: HashSet<usize> = weighted_random_sample(&effects, 10000)?;
-
-    log(&format!("Using {} peptides as input...", chosen_effects.len()));
-
-    log("Normalizing peptides and converting to vectors...");
 
     let peptides: Vec<String> = chosen_effects.iter().map(|idx| peptides[*idx].to_owned()).collect();
     let effects: Vec<Vec<usize>> = chosen_effects.iter().map(|idx| effects[*idx].to_owned()).collect();
@@ -95,7 +86,6 @@ pub async fn perform_effects_weighing_typed(
     */
 
     // Divide the number of PSMs of a peptide by the number of effects the peptide is associated with, exponentiated by 3
-    log("Started dividing the number of PSMS of a peptide by the number the peptide is associated with...");
     let peptide_weights: Vec<f32> = peptide_counts.iter()
                                           .zip(effects.iter().map(|connected_effects| connected_effects.len().pow(3)))
                                           .map(|(&count, len_cube)| count as f32 / len_cube as f32)
@@ -107,7 +97,6 @@ pub async fn perform_effects_weighing_typed(
                                                    .collect();
 
     // Sum up the weights of a effect and sort by weight
-    log("Started summing the weights of a effect and sorting them by weight...");
     let peptide_log_weights: Vec<f32> = peptide_weights.iter().map(|w| (w + 1.0).log10()).collect();
 
     //  Since large proteomes tend to have more detectable peptides,

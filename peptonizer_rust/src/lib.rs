@@ -1,7 +1,6 @@
 extern crate serde_json;
 extern crate serde;
 
-mod utils;
 mod http_client;
 mod random;
 pub mod weight_effects;

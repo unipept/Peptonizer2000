@@ -39,22 +39,16 @@ interface DedicatedWorkerGlobalScope {
 declare const self: DedicatedWorkerGlobalScope & typeof globalThis;
 
 async function fetchUnipeptEffectInformation(data: FetchUnipeptEffectTaskData): Promise<FetchUnipeptEffectTaskResult> {
-    console.time("Execution time fetching Unipept information");
-    
     const score_keys = [...data.peptidesScores.keys()];
     const peptidesScores = JSON.stringify(score_keys);
     const effectQuery = JSON.stringify(data.effectQuery);
 
     const unipeptJson = await fetch_unipept_taxa_wasm(peptidesScores, data.rank, effectQuery);
     
-    console.timeEnd("Execution time fetching Unipept information");
-
     return { unipeptJson };
 }
 
 async function performEffectsWeighing(data: PerformEffectsWeighingTaskData): Promise<PerformEffectsWeighingTaskResult> {
-    console.time("Execution time effects weiging");
-    
     const peptidesEffects = JSON.stringify(Object.fromEntries(data.peptidesEffects));
     const peptidesScores = JSON.stringify(Object.fromEntries(data.peptidesScores));
     const peptidesCounts = JSON.stringify(Object.fromEntries(data.peptidesCounts));
@@ -67,7 +61,6 @@ async function performEffectsWeighing(data: PerformEffectsWeighingTaskData): Pro
         data.rank
     );
 
-    console.timeEnd("Execution time effects weiging");
     return {
         sequenceScoresCsv,
         effectsWeightsCsv
@@ -77,12 +70,8 @@ async function performEffectsWeighing(data: PerformEffectsWeighingTaskData): Pro
 }
 
 async function generateGraph(data: GenerateGraphTaskData): Promise<GenerateGraphTaskDataResult> {
-    console.time("Execution time generating graph");
-
     const factor_graph_bytes = generate_pepgm_graph_wasm(data.sequenceScoresCsv);
     
-    console.timeEnd("Execution time generating graph");
-
     return {
         factor_graph_bytes
     };
@@ -90,34 +79,25 @@ async function generateGraph(data: GenerateGraphTaskData): Promise<GenerateGraph
 
 
 async function executePepgm(data: ExecutePepgmTaskData): Promise<ExecutePepgmTaskDataResult> {
-    console.time("Execution time Nori");
-
     const effectScoresJson = execute_pepgm_wasm(data.factor_graph_bytes, data.alpha, data.beta, true, data.prior);
 
-    console.timeEnd("Execution time Nori");
     return {
         effectScoresJson
     };
 }
 
 async function clusterEffects(data: ClusterEffectsTaskData): Promise<ClusterEffectsTaskDataResult> {
-    console.time("Execution time clustering effects");
-
     const effectClusterHeadsCsv = cluster_effects_wasm(data.sequenceScoresCsv, data.effectsWeightsCsv, data.similarityThreshold)
 
-    console.timeEnd("Execution time clustering effects");
     return {
         effectClusterHeadsCsv
     };
 }
 
 async function computeGoodness(data: ComputeGoodnessTaskData): Promise<ComputeGoodnessDataResult> {
-    console.time("Execution time computing goodness");
-    
     const peptonizerResults = JSON.stringify(Object.fromEntries(data.peptonizerResults));
     const goodness = compute_goodness_wasm(data.effectClusterHeadsCsv, peptonizerResults);
 
-    console.timeEnd("Execution time computing goodness");
     return {
         goodness
     }
