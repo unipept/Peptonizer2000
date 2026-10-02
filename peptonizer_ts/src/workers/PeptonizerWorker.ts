@@ -58,7 +58,8 @@ async function performEffectsWeighing(data: PerformEffectsWeighingTaskData): Pro
         peptidesScores,
         peptidesCounts,
         data.effectsInGraph,
-        data.rank
+        // The effects are already mapped by the caller, so no rank is given to the effects weighing.
+        undefined
     );
 
     return {

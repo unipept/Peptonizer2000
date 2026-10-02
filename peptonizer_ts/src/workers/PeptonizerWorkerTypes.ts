@@ -18,7 +18,6 @@ interface PerformEffectsWeighingTaskData {
     peptidesEffects: Map<string, number[]>;
     peptidesScores: Map<string, number>;
     peptidesCounts: Map<string, number>;
-    rank?: string;
     effectsInGraph: number;
 }
 

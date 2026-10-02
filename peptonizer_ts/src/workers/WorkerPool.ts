@@ -102,7 +102,6 @@ class WorkerPool {
      * @param peptidesScores Mapping between peptide sequences that need to be considered by the peptonizer and a
      * scoring value assigned to each sequence by prior steps (e.g. search engines).
      * @param peptidesCounts Mapping between peptide sequences and their occurrences in the input file.
-     * @param rank At which NCBI effect rank should the Peptonizer perform the effect inference?
      * @param effectsInGraph How many effects are being used in the graphical model?
      * @return A CSV-representation of a dataframe with effect weights.
      */
@@ -110,7 +109,6 @@ class WorkerPool {
         peptidesEffects: Map<string, number[]>,
         peptidesScores: Map<string, number>,
         peptidesCounts: Map<string, number>,
-        rank: string | undefined,
         effectsInGraph: number,
     ): Promise<[string, string]> {
         if (this.isCancelled) {
@@ -121,7 +119,6 @@ class WorkerPool {
             peptidesEffects,
             peptidesScores,
             peptidesCounts,
-            rank,
             effectsInGraph
         };
 
