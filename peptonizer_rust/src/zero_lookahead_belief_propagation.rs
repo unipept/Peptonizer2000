@@ -14,7 +14,7 @@ use nori::zero_lookahead_bp_from_graph_bytes;
 /// * `alpha` - Noisy-OR factor alpha parameter.
 /// * `beta` - Noisy-OR factor beta parameter.
 /// * `regularized` - Whether to regularize factor tables to penalize large numbers of parents.
-/// * `prior` - Prior belief for taxon nodes.
+/// * `prior` - Prior belief for effect nodes.
 /// * `max_iter` - Maximum number of belief propagation iterations.
 /// * `tol` - Tolerance threshold for message convergence.
 ///
@@ -33,13 +33,13 @@ pub fn run_belief_propagation(
 ) -> Result<String, Box<dyn std::error::Error>> {
     let results = zero_lookahead_bp_from_graph_bytes(graph_bytes, alpha, beta, regularized, prior, max_iter, tol).unwrap();
 
-    let taxon_score_dict: HashMap<String, f32> = results
+    let effect_score_dict: HashMap<String, f32> = results
         .into_iter()
         .filter_map(|(key, values)| {
             values.get(1).map(|&v| (key, v))
         })
         .collect();
 
-    Ok(serde_json::to_string(&taxon_score_dict)?)
+    Ok(serde_json::to_string(&effect_score_dict)?)
 }
 

@@ -10,7 +10,7 @@ parser.add_argument(
     "--sequence-scores-dataframe-file",
     type=str,
     required=True,
-    help="Dataframe file containing the taxa weights that have been computed before.",
+    help="Dataframe file containing the effects weights that have been computed before.",
 )
 parser.add_argument(
     "--out",
