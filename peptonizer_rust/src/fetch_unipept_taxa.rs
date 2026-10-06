@@ -3,11 +3,16 @@ use crate::http_client::HttpResult;
 use std::collections::{HashMap, HashSet};
 
 
-/// Fetches taxa for peptides and filters them by rank and taxon query.
+/// Fetches taxa for peptides and keeps only the taxa that are descendants of the taxon query.
+///
+/// The returned taxa are **not** normalized to `rank`: `rank` is only used to select which
+/// descendants of `taxon_query` are kept. Normalization to `rank` is done by
+/// [`crate::weight_effects::perform_effects_weighing`] when it receives an `effects_rank`, or
+/// must be done by the caller before weighing (as `peptonizer_ts` expects).
 ///
 /// # Arguments
 /// * `peptides` - JSON string of peptide sequences.
-/// * `rank` - Taxonomic rank used for filtering (e.g. "species").
+/// * `rank` - Highest rank a descendant of `taxon_query` may have to be kept (e.g. "species").
 /// * `taxon_query` - JSON string of taxon IDs to filter against.
 ///
 /// # Returns

@@ -37,11 +37,14 @@ mod wasm {
     extern crate js_sys;
     extern crate console_error_panic_hook;
 
-    /// Fetches taxa for peptides and filters them by rank and taxon query.
+    /// Fetches taxa for peptides and keeps only the taxa that are descendants of the taxon query.
+    ///
+    /// The returned taxa are **not** normalized to `rank`; see
+    /// `fetch_peptides_and_filter_taxa` for where normalization happens.
     ///
     /// # Arguments
     /// * `peptides` - JSON string of peptide sequences.
-    /// * `rank` - Taxonomic rank used for filtering (e.g. "species").
+    /// * `rank` - Highest rank a descendant of `taxon_query` may have to be kept (e.g. "species").
     /// * `taxon_query` - JSON string of taxon IDs to filter against.
     ///
     /// # Returns
@@ -257,11 +260,14 @@ mod pyo3 {
         parse_unique_peptides(tsv_content).unwrap()
     }
 
-    /// Fetches effects for peptides and filters them by rank and effect query.
+    /// Fetches effects for peptides and keeps only the effects that are descendants of the effect query.
+    ///
+    /// The returned taxa are **not** normalized to `rank`; see
+    /// `fetch_peptides_and_filter_taxa` for where normalization happens.
     ///
     /// # Arguments
     /// * `peptides` - JSON string of peptide sequences.
-    /// * `rank` - Taxonomic rank used for filtering (e.g. "species").
+    /// * `rank` - Highest rank a descendant of `taxon_query` may have to be kept (e.g. "species").
     /// * `taxon_query` - JSON string of effect IDs to filter against.
     ///
     /// # Returns
