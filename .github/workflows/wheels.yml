@@ -7,6 +7,7 @@ on:
     paths:
       - 'peptonizer_rust/**'
       - '!peptonizer_rust/dist/**'
+      - 'Cargo.toml'
       - '.github/workflows/wheels.yml'
 
   workflow_dispatch:

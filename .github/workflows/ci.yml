@@ -18,9 +18,6 @@ jobs:
   rust-lint:
     name: Rust lint
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: peptonizer_rust
     steps:
       - uses: actions/checkout@v4
 
@@ -29,29 +26,18 @@ jobs:
           components: clippy
 
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
   rust-test:
     name: Rust test
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        crate:
-          - peptonizer_rust
-          - peptonizer_analysis
-
-    defaults:
-      run:
-        working-directory: ${{ matrix.crate }}
-
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Run cargo test
-        run: cargo test
+        run: cargo test --workspace
 
   ts-lint:
     name: TypeScript lint

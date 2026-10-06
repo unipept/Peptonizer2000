@@ -26,6 +26,9 @@ use csv::{ReaderBuilder, WriterBuilder};
 use peptonizer_rust::{analyse_grid_search, effects_clustering, factor_graph, weight_effects, zero_lookahead_belief_propagation};
 use tokio::runtime::{Builder, Runtime};
 
+/// Peptide → internal numeric relationship IDs, as returned by the `read_relationships*` functions.
+pub type Relationships = HashMap<String, Vec<usize>>;
+
 /// Parsed command-line arguments shared by all three analysis binaries.
 pub struct AnalysisArguments {
     /// Path to the peptide-relationship TSV (peptide → taxon/protein/function ID).
@@ -121,7 +124,7 @@ fn parse_arguments_from(
 /// parse as a `usize`.
 pub fn read_relationships(
     path: impl AsRef<Path>,
-) -> Result<HashMap<String, Vec<usize>>, Box<dyn Error>> {
+) -> Result<Relationships, Box<dyn Error>> {
     let mut relationships = HashMap::new();
     let mut reader = tsv_reader(path)?;
     reader.set_headers(csv::StringRecord::new());
@@ -157,7 +160,7 @@ pub fn read_relationships(
 /// Returns an error if a row is missing its peptide or ID column.
 pub fn read_relationships_with_string_ids(
     path: impl AsRef<Path>,
-) -> Result<(HashMap<String, Vec<usize>>, HashMap<usize, String>), Box<dyn Error>> {
+) -> Result<(Relationships, HashMap<usize, String>), Box<dyn Error>> {
     let mut relationships = HashMap::new();
     let mut interned_ids = HashMap::new();
     let mut ids_by_index = HashMap::new();

@@ -97,8 +97,8 @@ wheels/
 *.tar.gz
 
 # Rust
+/target/
 peptonizer_rust/target/
-peptonizer_rust/Cargo.lock
 peptonizer_rust/node_modules/
 peptonizer_rust/pkg/
 peptonizer_rust/yarn.lock
