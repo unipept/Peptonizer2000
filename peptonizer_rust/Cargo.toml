@@ -17,7 +17,7 @@ petgraph = { version = "0.6", features = ["serde-1"] }
 minidom = "0.15"
 rustfft = { version = "6.2.0", features = ["wasm_simd"] }
 console_error_panic_hook = "0.1"
-rand = "0.8"
+rand = "0.10"
 priority-queue = "2.7.0"
 ordered-float = "4.2"
 fast-math = "0.1"
@@ -28,7 +28,7 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ['Headers', 'Request', 'RequestInit', 'RequestMode', 'Response', 'Window', 'XmlHttpRequest'] }
 js-sys = "0.3.76"
-getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pyo3 = { version = "0.22", features = ["extension-module"] }

@@ -27,16 +27,16 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.70.0",
-    "vite": "^6.2.0",
+    "typescript-eslint": "^8.70.1",
+    "vite": "^8.3.2",
     "vite-plugin-wasm": "^3.6.0"
   },
   "dependencies": {
     "@types/async": "^3.2.24",
     "async": "^3.2.6",
     "rollup-plugin-dts": "^6.1.1",
-    "vite-plugin-dts": "^4.5.3"
+    "vite-plugin-dts": "^5.1.2"
   }
 }
