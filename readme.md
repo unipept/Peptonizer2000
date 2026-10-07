@@ -47,6 +47,7 @@
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
+    <li><a href="#founders">Founders</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
@@ -271,15 +272,23 @@ Distributed under the Apache 2.0 License. See `LICENSE.txt` for more information
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
-<!-- CONTACT -->
-## Contact
+<!-- FOUNDERS -->
+## Founders
 
-Tanja Holstein - [@HolsteinTanja](https://twitter.com/HolsteinTanja) - tanja.holstein@ugent.be <br>
-Pieter Verschaffelt - pieter.verschaffelt@ugent.be
+Tanja Holstein - [@HolsteinTanja](https://twitter.com/HolsteinTanja) <br>
+Pieter Verschaffelt
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/compomics/Peptonizer2000/refs/heads/master/peptonizer_developers.jpeg" alt="Logo"  height="300">
 </div>
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+
+<!-- CONTACT -->
+## Contact
+
+For questions or feedback, send an email to [unipept@ugent.be](mailto:unipept@ugent.be).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
