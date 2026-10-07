@@ -1,6 +1,6 @@
 {
   "name": "peptonizer",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "Infers the taxonomic or functional origin of peptides from metaproteomic mass-spectrometry samples, combining PepGM with Unipept.",
   "license": "Apache-2.0",
   "repository": {

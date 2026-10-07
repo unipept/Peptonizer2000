@@ -10,6 +10,10 @@ jobs:
   publish:
     name: Build and publish peptonizer to npm
     runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -27,10 +31,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Trusted publishing (OIDC) needs npm >= 11.5.1, which ships with Node 24.
+          node-version: 24
           cache: npm
           cache-dependency-path: peptonizer_ts/package-lock.json
-          registry-url: 'https://registry.npmjs.org'
+          # No registry-url: auth uses npm trusted publishing (OIDC), which
+          # needs no .npmrc, and the registry defaults to registry.npmjs.org.
 
       - name: Install dependencies
         working-directory: peptonizer_ts
@@ -46,6 +52,4 @@ jobs:
 
       - name: Publish to npm
         working-directory: peptonizer_ts
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
