@@ -1,0 +1,3 @@
+[workspace]
+members = ["peptonizer_rust", "peptonizer_analysis"]
+resolver = "3"

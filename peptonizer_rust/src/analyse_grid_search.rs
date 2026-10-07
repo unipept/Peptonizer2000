@@ -1,13 +1,13 @@
 use std::collections::{HashSet, HashMap};
-use crate::taxa_clustering::{Taxon, parse_taxon_csv};
+use crate::effects_clustering::{Effect, parse_effect_csv};
 
 
 /// Computes a "goodness" score for clustering results by combining
 /// ranking similarity (via rank-biased overlap) and diversity (via entropy).
 /// 
 /// # Arguments
-/// * `clustered_taxa_weights_csv` - CSV string containing clustered taxa weights.
-/// * `peptonizer_results` - JSON string containing taxa scores produced by Peptonizer.
+/// * `effect_cluster_heads_csv` - CSV string containing effect cluster heads.
+/// * `peptonizer_results` - JSON string containing effects scores produced by Peptonizer.
 /// 
 /// # Returns
 /// A `Result<f64, Box<dyn std::error::Error>>` containing the computed goodness score,
@@ -16,36 +16,36 @@ use crate::taxa_clustering::{Taxon, parse_taxon_csv};
 /// # Errors
 /// This function may return an error if the input CSV or JSON cannot be parsed.
 pub fn compute_goodness(
-    clustered_taxa_weights_csv: String, 
-    peptonizer_results: String
+    effect_cluster_heads_csv: &str,
+    peptonizer_results: &str
 ) -> Result<f64, Box<dyn std::error::Error>> {
 
-    let taxid_weights: Vec<Taxon> = parse_taxon_csv(clustered_taxa_weights_csv)?;
-    let higher_taxa: Vec<usize> = taxid_weights.iter().map(|t| t.higher_taxa).collect();
+    let taxid_weights: Vec<Effect> = parse_effect_csv(effect_cluster_heads_csv)?;
+    let effect: Vec<usize> = taxid_weights.iter().map(|t| t.effect).collect();
 
-    let taxa_scores: HashMap<String, f64> = serde_json::from_str(&peptonizer_results)?;
-    let mut taxa_scores: Vec<(&String, &f64)> = taxa_scores.iter().collect();
+    let effects_scores: HashMap<String, f64> = serde_json::from_str(peptonizer_results)?;
+    let mut effects_scores: Vec<(&String, &f64)> = effects_scores.iter().collect();
 
-    taxa_scores.sort_by(|a, b| b.1.partial_cmp(a.1).expect("Partial compare returned None")); // ascending order
+    effects_scores.sort_by(|a, b| b.1.partial_cmp(a.1).expect("Partial compare returned None")); // ascending order
 
-    let sorted_ids: Vec<usize> = taxa_scores.iter()
+    let sorted_ids: Vec<usize> = effects_scores.iter()
         .map(|(k, _)| (*k).clone().parse::<usize>())
         .collect::<Result<Vec<_>, _>>()?;
-    let sorted_scores: Vec<f64> = taxa_scores.iter().map(|(_, v)| **v).collect::<Vec<_>>();
+    let sorted_scores: Vec<f64> = effects_scores.iter().map(|(_, v)| **v).collect::<Vec<_>>();
 
     let entropy = entropy(&sorted_scores);
-    let rbo = rbo(&higher_taxa, &sorted_ids);
+    let rbo = rbo(&effect, &sorted_ids);
 
     Ok(rbo / entropy.powi(2))
 }
 
 
-/// Computes the Rank-Biased Overlap (RBO) between two ranked lists of taxon IDs.
+/// Computes the Rank-Biased Overlap (RBO) between two ranked lists of effect IDs.
 /// RBO measures the agreement between two ranked lists, emphasizing higher ranks.
 /// 
 /// # Arguments
-/// * `list1` - First ranked list of taxon IDs.
-/// * `list2` - Second ranked list of taxon IDs.
+/// * `list1` - First ranked list of effect IDs.
+/// * `list2` - Second ranked list of effect IDs.
 /// 
 /// # Returns
 /// A value between 0.0 and 1.0 representing the similarity of the two ranked lists.
@@ -101,7 +101,7 @@ fn entropy(values: &[f64]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::taxa_clustering::generate_taxa_cluster_csv;
+    use crate::effects_clustering::generate_effects_cluster_csv;
 
     #[test]
     fn test_entropy_uniform_distribution() {
@@ -136,24 +136,22 @@ mod tests {
 
     #[test]
     fn test_compute_goodness_valid_inputs() {
-        // Prepare a small CSV with two taxa
-        let taxa = vec![
-            Taxon {
+        // Prepare a small CSV with two effects
+        let effects = vec![
+            Effect {
                 id: 0,
-                higher_taxa: 1,
+                effect: 1,
                 scaled_weight: 0.5,
                 unique: true,
-                cluster_members: vec![1, 2],
             },
-            Taxon {
+            Effect {
                 id: 1,
-                higher_taxa: 2,
+                effect: 2,
                 scaled_weight: 0.8,
                 unique: false,
-                cluster_members: vec![2, 3],
             },
         ];
-        let csv = generate_taxa_cluster_csv(taxa).unwrap();
+        let csv = generate_effects_cluster_csv(effects).unwrap();
 
         // JSON scores
         let json_scores = serde_json::json!({
@@ -161,7 +159,7 @@ mod tests {
             "2": 0.8
         }).to_string();
 
-        let result = compute_goodness(csv, json_scores);
+        let result = compute_goodness(&csv, &json_scores);
         assert!(result.is_ok());
         let score = result.unwrap();
         assert!(score.is_finite());

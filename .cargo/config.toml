@@ -1,0 +1,12 @@
+# `peptonizer_rust` builds a `pyo3` extension-module `cdylib` alongside its `rlib` (see
+# peptonizer_rust/Cargo.toml). Extension modules intentionally don't link against libpython —
+# those symbols are resolved at `dlopen` time by whichever Python interpreter loads them — but on
+# macOS the linker needs `-undefined dynamic_lookup` to allow that. `maturin` (used by CI, see
+# .github/workflows/wheels.yml) injects this automatically; plain `cargo build`/`cargo test` do
+# not, which otherwise breaks any local Rust crate (e.g. peptonizer_analysis) that depends on
+# peptonizer_rust for its `rlib` target, since rustc builds both crate-types in one invocation.
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

@@ -15,8 +15,8 @@ benchmark_dir: '../benchmarks'
 
 # ** Analysis specific parameters**
 
-# How many taxa are being used in the graphical model?
-taxa_in_graph: 100
+# How many effects are being used in the graphical model?
+effects_in_graph: 100
 
 # Increments of alpha parameter to use for the grid search
 alpha: [0.8, 0.9, 0.99]
@@ -32,8 +32,8 @@ prior: [0.3, 0.5]
 
 regularized: True
 
-# How many taxa should be shown in the final barplot?
-taxa_in_plot: 25
+# How many effects should be shown in the final barplot?
+effects_in_plot: 25
 
 # ** Unipept specific parameters **
 
@@ -41,7 +41,7 @@ taxa_in_plot: 25
 # our input sample).
 taxon_query: [2]
 
-# At which NCBI rank should the output taxa be situated?
+# At which NCBI rank should the output effects be situated?
 taxon_rank: 'species'
 
 # ** Advanced parameters **

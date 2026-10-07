@@ -27,7 +27,8 @@ parser.add_argument(
     type=str,
     required=False,
     default="species",
-    help="Taxonomic rank at which you want the Peptonizer2000 results to be resolved.",
+    help="Only descendants of the taxonomy query at this rank or lower are kept. Taxa are not normalized to this "
+         "rank here; that happens in infer_effects_weights.py (--effect-rank).",
 )
 
 args = parser.parse_args()

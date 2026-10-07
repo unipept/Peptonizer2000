@@ -57,7 +57,7 @@ parser.add_argument(
     "--beta", type=float, required=True, help="Probability of wrong detection."
 )
 parser.add_argument(
-    "--prior", type=float, required=True, help="Prior assigned to all taxa."
+    "--prior", type=float, required=True, help="Prior assigned to all effects."
 )
 parser.add_argument(
     "--regularized",
