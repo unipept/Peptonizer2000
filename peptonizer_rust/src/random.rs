@@ -24,12 +24,12 @@ pub fn select_random_samples_with_weights(
     n: usize,
 ) -> Result<HashSet<usize>, Box<dyn std::error::Error>> {
     use rand::prelude::*;
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
 
     let mut keys: Vec<(f64, usize)> = weights.iter().enumerate()
         .filter(|&(_, &w)| w > 0.0)
         .map(|(i, &w)| {
-            let u: f64 = rng.gen_range(0.0..1.0);
+            let u: f64 = rng.random_range(0.0..1.0);
             let key = u.powf(1.0/w);
             (key, i)
         }).collect();
