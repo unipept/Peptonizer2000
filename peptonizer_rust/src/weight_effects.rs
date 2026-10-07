@@ -7,16 +7,16 @@ use crate::unipept_communicator::get_unique_lineage_at_specified_rank_async;
 ///
 /// # Arguments
 ///
-/// * `pep_effects` - JSON string mapping peptide peptides to lists of effect IDs.
-/// * `pep_scores` - JSON string mapping peptide peptides to their scores (float).
-/// * `pep_psm_counts` - JSON string mapping peptide peptides to their PSM counts (int).
+/// * `pep_effects` - JSON string mapping peptide sequences to lists of effect IDs.
+/// * `pep_scores` - JSON string mapping peptide sequences to their scores (float).
+/// * `pep_psm_counts` - JSON string mapping peptide sequences to their PSM counts (int).
 /// * `max_effects` - Maximum number of effects to include in output.
-/// * `effects_rank` - NCBI rank at which the Peptonizer analysis should be performed. Should be a rank that is supported by Unipept.
+/// * `effects_rank` - NCBI rank (supported by Unipept) to normalize the effects to, or `None` to use the effects as-is.
 ///
 /// # Returns
 ///
 /// Tuple `(sequence_csv, effects_weights_csv)`:
-/// * `sequence_csv` - CSV string of peptide peptides and their weights.
+/// * `sequence_csv` - CSV string of peptide sequences and their weights.
 /// * `effects_weights_csv` - CSV string of effects weights and uniqueness.
 pub async fn perform_effects_weighing(
     pep_effects: String,
@@ -42,12 +42,12 @@ pub async fn perform_effects_weighing(
 /// * `peptide_scores_map` - Mapping of peptide sequences to their scores (float).
 /// * `peptide_counts_map` - Mapping of peptide sequences to their PSM counts (int).
 /// * `max_effects` - Maximum number of effects to include in output.
-/// * `effects_rank` - NCBI rank at which the Peptonizer analysis should be performed. Should be a rank that is supported by Unipept.
+/// * `effects_rank` - NCBI rank (supported by Unipept) to normalize the effects to, or `None` to use the effects as-is.
 ///
 /// # Returns
 ///
 /// Tuple `(sequence_csv, effects_weights_csv)`:
-/// * `sequence_csv` - CSV string of peptide peptides and their weights.
+/// * `sequence_csv` - CSV string of peptide sequences and their weights.
 /// * `effects_weights_csv` - CSV string of effects weights and uniqueness.
 pub async fn perform_effects_weighing_typed(
     peptide_effects: HashMap<String, Vec<usize>>,
@@ -81,8 +81,6 @@ pub async fn perform_effects_weighing_typed(
 
     /* Score the degeneracy of a effects, i.e.,
        how conserved a peptide sequence is between effects.
-       map all taxids in the list in the effects column back to their taxid at species level (or the rank specified by the user)
-       Right now, Effect is simply a copy of effects. This step still needs to be optimized.
     */
 
     // Divide the number of PSMs of a peptide by the number of effects the peptide is associated with, exponentiated by 3

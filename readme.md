@@ -197,7 +197,7 @@ then the workflow could not find a wheel for `peptonizer_rust` for your platform
 ### Configuration file
 
 The Peptonizer2000 relies on a configuration file in `yaml` format to set up the workflow.
-An example configuration file is provided in `config/config.yaml`. <br>
+An example configuration file is provided in `snakemake/config/config.yaml`. <br>
 Do not change the config file location.
 
 <details> 
@@ -211,7 +211,7 @@ Do not change the config file location.
 
    <details > <summary> Analysis specific parameter </summary>
    <ul>
-      <li>effects_in_graph: # of inferred effects that appear in the barplot that is created of the results csv</li>
+      <li>effects_in_graph: number of effects used in the graphical model</li>
       <li>effects_in_plot: number of effects reported in bar plot</li>
       <li>alpha: grid search increments for alpha (list) </li>
       <li>beta: grid search increments for beta (list) </li>
@@ -229,22 +229,22 @@ Do not change the config file location.
 
 ### Output files
 
-All Peptonizer2000 output files are saved into the results folder and include the following: <br>
+All Peptonizer2000 output files are saved into the `data_dir` folder (see config parameters) and include the following: <br>
 
 Main results: <br>
 
-- peptonizer_results.csv: table with values ID, score, type (contains all taxids under 'ID' and all probabilities under 'score' <br>
-- peptonizer_results.png: bar plot of the peptonizer results showing the scores for the #'effects_in_plot' (see config parameters) highest scoring effects
+- peptonizer_result.json: results of the best-scoring parameter set <br>
+- peptonizer_result.png: bar plot of the peptonizer results showing the scores for the #'effects_in_plot' (see config parameters) highest scoring effects
   <br>
 
 Additional files: <br>
 - Intermediate results folders sorted by their prior value for all possible grid search parameter combinations
 - effects_weights_dataframe.csv: csv file of all taxids that had at least one peptide map to them and their weight 
-- pepgm_graph.graphml: graphml file of the graphical model (without convolution tree factors). Useful to visualize the graph structure and peptide-effect connections <br>
+- pepgm_full_graph_bytes.bin: serialized factor graph used for belief propagation <br>
 - sequence_scores_dataframe.csv: dataframe with petides, effects and scores used to create the graph <br>
-- best_parameter.csv: file with best parameter <br>
-- unipept_responses.json: response of unipept queries <br>
-- effect_cluster_heads_dataframe: additional .csv file resulting from the clustering of effects by peptidome used for rbo<br>
+- best_parameters.csv: file with best parameters <br>
+- peptide_taxa.json: response of unipept queries <br>
+- effect_cluster_heads_dataframe.csv: additional .csv file resulting from the clustering of effects by peptidome used for rbo<br>
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -283,11 +283,10 @@ and `functional_analysis` then make no Unipept queries at all, since protein and
 ### Building
 
 ```bash
-cd peptonizer_analysis
-cargo build --release
+cargo build --release -p peptonizer_analysis
 ```
 
-The compiled binaries are written to `target/release/`.
+Run this from the repository root. The compiled binaries are written to `target/release/`.
 
 ### Input files
 
@@ -295,7 +294,7 @@ Each tool takes three tab-separated files with **no header row**:
 
 | File | Flag | Columns |
 |---|---|---|
-| Relationships | `--peptide-taxa` / `--peptide-proteins` / `--peptide-functions` | `peptide`, `id` (an integer taxon/function ID, or a protein name for `--peptide-proteins`) |
+| Relationships | `--peptide-taxa` / `--peptide-proteins` / `--peptide-functions` | `peptide`, `id` (an integer taxon ID, or a protein/function ID string such as a GO or EC term) |
 | Scores | `--peptide-scores` | `peptide`, `score` (a float, e.g. from your search engine) |
 | Counts | `--peptide-counts` | `peptide`, `count` (an integer PSM count) |
 
@@ -338,7 +337,7 @@ taxon_id	probability
 816	0.42
 ```
 
-(`protein_id`/`function_id` for the other two tools; `protein_inference` reports the original protein name
+(`protein_id`/`function_id` for the other two tools; these report the original protein/function ID string
 instead of an internal ID.)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -346,7 +345,7 @@ instead of an internal ID.)
 <!-- LICENSE -->
 ## License
 
-Distributed under the Apache 2.0 License. See `LICENSE.txt` for more information.
+Distributed under the Apache 2.0 License. See `LICENSE.md` for more information.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

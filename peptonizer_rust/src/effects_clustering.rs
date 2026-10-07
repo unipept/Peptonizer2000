@@ -69,7 +69,7 @@ pub fn generate_effects_cluster_csv(effects: Vec<Effect>) -> Result<String, Box<
 /// Cluster effects based on peptidome similarity and returns a CSV containing the effects that are cluster heads.
 ///
 /// # Arguments
-/// * `graph_xml` - GraphML as string.
+/// * `sequence_scores_csv` - Sequence scores as CSV string.
 /// * `effects_weights_csv` - Effects weights as CSV string.
 /// * `similarity_threshold` - Threshold for clustering.
 ///

@@ -94,13 +94,13 @@ mod wasm {
         Ok(Box::new([JsValue::from(sequence_csv), JsValue::from(effects_weights_csv)]))
     }
 
-    /// Generates a GraphML representation of a factor graph from a CSV string of sequence scores.
+    /// Generates a serialized factor graph from a CSV string of sequence scores.
     ///
     /// # Arguments
     /// * `sequence_scores_csv` - A string containing CSV data for sequence scores.
     ///
     /// # Returns
-    /// Returns a `Result` containing a GraphML string representation of the factor graph.
+    /// Returns the serialized factor graph bytes.
     ///
     /// # Errors
     /// Returns an error if CSV parsing fails or if any error occurs during graph construction.
@@ -111,15 +111,15 @@ mod wasm {
         factor_graph_bytes
     }
 
-    /// Runs belief propagation on a factor graph provided as a GraphML string.
+    /// Runs belief propagation on a serialized factor graph (as produced by `generate_graph`).
     ///
     /// This function constructs the factor graph, fills in factor tables and priors,
     /// splits the graph into connected components, and performs loopy belief propagation
-    /// on each component. The result is returned as a CSV string.
+    /// on each component. The result is returned as a JSON string.
     ///
     /// # Arguments
     ///
-    /// * `graph` - GraphML representation of the factor graph.
+    /// * `graph` - Serialized factor graph bytes.
     /// * `alpha` - Noisy-OR factor alpha parameter.
     /// * `beta` - Noisy-OR factor beta parameter.
     /// * `regularized` - Whether to regularize factor tables to penalize large numbers of parents.
@@ -129,8 +129,7 @@ mod wasm {
     ///
     /// # Returns
     ///
-    /// CSV string with one row per node containing columns:
-    /// `[node_name, posterior_probability_1, node_category]`
+    /// JSON string mapping each node name to its posterior probability.
     #[wasm_bindgen]
     pub fn execute_pepgm_wasm(
         graphs: Vec<u8>,
@@ -260,7 +259,7 @@ mod pyo3 {
         parse_unique_peptides(tsv_content).unwrap()
     }
 
-    /// Fetches effects for peptides and keeps only the effects that are descendants of the effect query.
+    /// Fetches taxa for peptides and keeps only the taxa that are descendants of the taxon query.
     ///
     /// The returned taxa are **not** normalized to `rank`; see
     /// `fetch_peptides_and_filter_taxa` for where normalization happens.
@@ -268,10 +267,10 @@ mod pyo3 {
     /// # Arguments
     /// * `peptides` - JSON string of peptide sequences.
     /// * `rank` - Highest rank a descendant of `taxon_query` may have to be kept (e.g. "species").
-    /// * `taxon_query` - JSON string of effect IDs to filter against.
+    /// * `taxon_query` - JSON string of taxon IDs to filter against.
     ///
     /// # Returns
-    /// JSON string mapping peptides to filtered effect IDs.
+    /// JSON string mapping peptides to filtered taxon IDs.
     ///
     /// # Panics
     /// Panics if input JSON cannot be parsed or if result cannot be serialized.
@@ -315,13 +314,13 @@ mod pyo3 {
         block_on_binding_future(perform_effects_weighing(unipept_responses, pep_scores, pep_psm_counts, max_effects, Some(effects_rank))).unwrap()
     }
 
-    /// Generates a GraphML representation of a factor graph from a CSV string of effect weights.
+    /// Generates a serialized factor graph from a CSV string of sequence scores.
     ///
     /// # Arguments
-    /// * `effects_weights_csv` - A string containing CSV data for effect weights.
+    /// * `effects_weights_csv` - The sequence scores CSV produced by the effects weighing.
     ///
     /// # Returns
-    /// Returns a `Result` containing a GraphML string representation of the factor graph.
+    /// Returns the serialized factor graph bytes.
     ///
     /// # Errors
     /// Returns an error if CSV parsing fails or if any error occurs during graph construction.
@@ -332,15 +331,15 @@ mod pyo3 {
         PyBytes::new_bound(py, &graph_bytes).into()
     }
 
-    /// Runs belief propagation on a factor graph provided as a GraphML string.
+    /// Runs belief propagation on a serialized factor graph (as produced by `generate_graph`).
     ///
     /// This function constructs the factor graph, fills in factor tables and priors,
     /// splits the graph into connected components, and performs loopy belief propagation
-    /// on each component. The result is returned as a CSV string.
+    /// on each component. The result is returned as a JSON string.
     ///
     /// # Arguments
     ///
-    /// * `graph` - GraphML representation of the factor graph.
+    /// * `graph` - Serialized factor graph bytes.
     /// * `alpha` - Noisy-OR factor alpha parameter.
     /// * `beta` - Noisy-OR factor beta parameter.
     /// * `regularized` - Whether to regularize factor tables to penalize large numbers of parents.
@@ -350,8 +349,7 @@ mod pyo3 {
     ///
     /// # Returns
     ///
-    /// CSV string with one row per node containing columns:
-    /// `[node_name, posterior_probability_1, node_category]`
+    /// JSON string mapping each node name to its posterior probability.
     #[pyfunction]
     #[pyo3(signature = (graph, alpha, beta, regularized, prior, max_iter=None, tol=None))]
     pub fn execute_pepgm_py(
@@ -431,14 +429,14 @@ mod pyo3 {
     /// Read a CSV-file that was produced by the PepGM algorithm and use it to
     /// produce a new CSV-file that only contains the effect-related information
     /// and scores. The string produced by this function can be written directly
-    /// to a valid CSV-file and contains three columns: `effect_name`, `effect_id`,
+    /// to a valid CSV-file and contains three columns: `taxon_name`, `id`,
     /// and `score`.
     ///
     /// # Arguments
     /// * `csv_content` - A CSV-file (as a string) that has been generated by running the PepGM algorithm.
     ///
     /// # Returns
-    /// A `String` containing CSV rows with the columns: `effect_name,effect_id,score`.
+    /// A `String` containing CSV rows with the columns: `taxon_name,id,score`.
     #[pyfunction]
     pub fn clean_csv_py(csv_content: String) -> String {
         block_on_binding_future(clean_csv(csv_content)).unwrap()

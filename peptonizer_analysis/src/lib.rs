@@ -5,7 +5,7 @@
 //! `protein_inference` and `functional_analysis` make no Unipept queries: protein and function
 //! IDs are used as-is. `taxonomic_analysis` does query Unipept — it normalizes taxon IDs to
 //! [`taxonomic_analysis`'s configured rank](../bin/taxonomic_analysis.rs) before weighing, the
-//! same way the Snakemake workflow and browser frontend do, so it requires network access to
+//! same way the Snakemake workflow does, so it requires network access to
 //! `api.unipept.ugent.be`. This crate reuses `peptonizer_rust`'s algorithm code (`weight_effects`,
 //! `factor_graph`, `effects_clustering`, `zero_lookahead_belief_propagation`,
 //! `analyse_grid_search`) as a normal path dependency — see that crate's `Cargo.toml` for the

@@ -38,13 +38,13 @@ pub fn parse_effect_weights_csv(sequence_scores_csv: String) -> Result<Vec<Effec
 }
 
 
-/// Generates a GraphML representation of a factor graph from a CSV string of effect weights.
+/// Generates a serialized factor graph from the sequence scores CSV produced by the effects weighing.
 ///
 /// # Arguments
-/// * `sequence_scores_csv` - A string containing CSV data for effect weights.
+/// * `sequence_scores_csv` - The sequence scores CSV.
 ///
 /// # Returns
-/// Returns a `Result` containing a GraphML string representation of the factor graph.
+/// Returns a `Result` containing the serialized factor graph bytes.
 ///
 /// # Errors
 /// Returns an error if CSV parsing fails or if any error occurs during graph construction.

@@ -103,7 +103,7 @@ class WorkerPool {
      * scoring value assigned to each sequence by prior steps (e.g. search engines).
      * @param peptidesCounts Mapping between peptide sequences and their occurrences in the input file.
      * @param effectsInGraph How many effects are being used in the graphical model?
-     * @return A CSV-representation of a dataframe with effect weights.
+     * @return Tuple of the sequence scores CSV and the effects weights CSV.
      */
     public async performEffectsWeighing(
         peptidesEffects: Map<string, number[]>,
