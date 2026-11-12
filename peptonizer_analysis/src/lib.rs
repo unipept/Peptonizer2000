@@ -12,8 +12,11 @@
 //! `rlib` build target and `lib.rs` for the `pub mod` declarations that make this possible.
 //!
 //! The `taxonomic_analysis`, `protein_inference`, and `functional_analysis` binaries in `src/bin/`
-//! are thin wrappers around [`run_analysis`] that only differ in their CLI flag name, default
-//! output filename, and grid-search parameter ranges.
+//! are thin wrappers around [`run_analysis`] that only differ in their CLI flag names, default
+//! output filename, and grid-search parameter ranges. All three accept `--max-peptides` (size of
+//! the weighted random peptide sample) and a per-binary results flag (`--taxa-to-return`,
+//! `--proteins-to-return`, `--functions-to-return`) capping how many top-weighted IDs enter the
+//! factor graph.
 
 use std::collections::HashMap;
 use std::error::Error;
@@ -25,6 +28,9 @@ use std::sync::OnceLock;
 use csv::{ReaderBuilder, WriterBuilder};
 use peptonizer_rust::{analyse_grid_search, effects_clustering, factor_graph, weight_effects, zero_lookahead_belief_propagation};
 use tokio::runtime::{Builder, Runtime};
+
+/// Default for `--max-peptides`, shared with the WASM/Python bindings.
+pub use weight_effects::DEFAULT_MAX_PEPTIDES;
 
 /// Peptide → internal numeric relationship IDs, as returned by the `read_relationships*` functions.
 pub type Relationships = HashMap<String, Vec<usize>>;
@@ -39,6 +45,10 @@ pub struct AnalysisArguments {
     pub counts: String,
     /// Path the results TSV should be written to.
     pub output: String,
+    /// Maximum number of top-weighted relationship IDs included in the factor graph.
+    pub results_to_return: usize,
+    /// Maximum number of peptides kept by the weighted random sample before weighing.
+    pub max_peptides: usize,
 }
 
 /// Outcome of running the grid search: the winning posterior probabilities together with the
@@ -64,28 +74,44 @@ fn has_help_flag_in(mut args: impl Iterator<Item = String>) -> bool {
 ///
 /// `relationship_flag` is the binary-specific flag that carries the relationship TSV path (e.g.
 /// `--peptide-taxa`, `--peptide-proteins`, `--peptide-functions`); `default_output` is used when
-/// `--output` is not given. Every recognized flag must be followed by a value; unrecognized flags
-/// are rejected.
+/// `--output` is not given. `results_flag` is the binary-specific flag for
+/// [`AnalysisArguments::results_to_return`] (e.g. `--proteins-to-return`), defaulting to
+/// `default_results_to_return`; `--max-peptides` defaults to
+/// [`weight_effects::DEFAULT_MAX_PEPTIDES`]. Every recognized flag must be followed by a value;
+/// unrecognized flags are rejected.
 ///
 /// # Errors
-/// Returns an error if a flag is missing its value, an unrecognized flag is passed, or
-/// `relationship_flag`, `--peptide-scores`, or `--peptide-counts` is not provided.
+/// Returns an error if a flag is missing its value, an unrecognized flag is passed,
+/// `relationship_flag`, `--peptide-scores`, or `--peptide-counts` is not provided, or a count flag
+/// is not a whole number ≥ 1.
 pub fn parse_arguments(
     relationship_flag: &str,
+    results_flag: &str,
     default_output: &str,
+    default_results_to_return: usize,
 ) -> Result<AnalysisArguments, Box<dyn Error>> {
-    parse_arguments_from(std::env::args(), relationship_flag, default_output)
+    parse_arguments_from(
+        std::env::args(),
+        relationship_flag,
+        results_flag,
+        default_output,
+        default_results_to_return,
+    )
 }
 
 fn parse_arguments_from(
     args: impl Iterator<Item = String>,
     relationship_flag: &str,
+    results_flag: &str,
     default_output: &str,
+    default_results_to_return: usize,
 ) -> Result<AnalysisArguments, Box<dyn Error>> {
     let mut relationships = None;
     let mut scores = None;
     let mut counts = None;
     let mut output = default_output.to_owned();
+    let mut results_to_return = default_results_to_return;
+    let mut max_peptides = weight_effects::DEFAULT_MAX_PEPTIDES;
     let mut arguments = args.skip(1);
 
     while let Some(argument) = arguments.next() {
@@ -96,6 +122,10 @@ fn parse_arguments_from(
             "--peptide-scores" => scores = Some(value),
             "--peptide-counts" => counts = Some(value),
             "--output" => output = value,
+            "--max-peptides" => max_peptides = parse_positive_count(&argument, &value)?,
+            _ if argument == results_flag => {
+                results_to_return = parse_positive_count(&argument, &value)?
+            }
             _ if argument == relationship_flag => relationships = Some(value),
             _ => return Err(format!("Unknown argument: {argument}").into()),
         }
@@ -106,7 +136,17 @@ fn parse_arguments_from(
         scores: scores.ok_or("Missing --peptide-scores")?,
         counts: counts.ok_or("Missing --peptide-counts")?,
         output,
+        results_to_return,
+        max_peptides,
     })
+}
+
+/// Parses `value` as a count of at least 1, naming `flag` in the error message otherwise.
+fn parse_positive_count(flag: &str, value: &str) -> Result<usize, Box<dyn Error>> {
+    match value.parse::<usize>() {
+        Ok(count) if count >= 1 => Ok(count),
+        _ => Err(format!("Invalid value for {flag}: expected a whole number ≥ 1, got '{value}'").into()),
+    }
 }
 
 /// Reads a `peptide<TAB>relationship_id` TSV into a peptide → relationship-IDs map.
@@ -263,6 +303,9 @@ pub fn read_counts(path: impl AsRef<Path>) -> Result<HashMap<String, usize>, Box
 /// search over every `(alpha, beta, prior)` combination in `alphas`/`betas`/`priors`, and
 /// goodness-based selection of the best-scoring parameter set.
 ///
+/// `results_to_return` caps how many top-weighted relationship IDs enter the factor graph, and
+/// `max_peptides` caps the weighted random sample of peptides taken before weighing.
+///
 /// `effects_rank` requests Unipept-rank normalization of relationship IDs before weighing (used
 /// for taxonomic analysis); pass `None` to use relationship IDs as-is (protein inference, and
 /// functional analysis, have no such rank).
@@ -279,6 +322,7 @@ pub fn run_analysis(
     betas: &[f32],
     priors: &[f32],
     results_to_return: usize,
+    max_peptides: usize,
     effects_rank: Option<&str>,
 ) -> Result<AnalysisResult, Box<dyn Error>> {
     validate_inputs(&relationships, &scores, &counts)?;
@@ -289,6 +333,7 @@ pub fn run_analysis(
         scores,
         counts,
         results_to_return,
+        max_peptides,
         effects_rank.map(str::to_owned),
     ))?;
 
@@ -504,7 +549,9 @@ mod tests {
                 "out.tsv",
             ]),
             "--peptide-taxa",
+            "--taxa-to-return",
             "default.tsv",
+            100,
         )
         .unwrap();
 
@@ -527,7 +574,9 @@ mod tests {
                 "counts.tsv",
             ]),
             "--peptide-taxa",
+            "--taxa-to-return",
             "default.tsv",
+            100,
         )
         .unwrap();
 
@@ -535,11 +584,55 @@ mod tests {
     }
 
     #[test]
+    fn parse_arguments_uses_default_counts_when_omitted() {
+        let parsed = parse_count_arguments(&[]).unwrap();
+        assert_eq!(parsed.results_to_return, 100);
+        assert_eq!(parsed.max_peptides, weight_effects::DEFAULT_MAX_PEPTIDES);
+    }
+
+    #[test]
+    fn parse_arguments_accepts_count_overrides() {
+        let parsed =
+            parse_count_arguments(&["--taxa-to-return", "250", "--max-peptides", "20000"]).unwrap();
+        assert_eq!(parsed.results_to_return, 250);
+        assert_eq!(parsed.max_peptides, 20000);
+    }
+
+    #[test]
+    fn parse_arguments_rejects_zero_count() {
+        assert!(parse_count_arguments(&["--max-peptides", "0"]).is_err());
+        assert!(parse_count_arguments(&["--taxa-to-return", "0"]).is_err());
+    }
+
+    #[test]
+    fn parse_arguments_rejects_non_numeric_or_negative_count() {
+        assert!(parse_count_arguments(&["--max-peptides", "abc"]).is_err());
+        assert!(parse_count_arguments(&["--max-peptides", "-5"]).is_err());
+        assert!(parse_count_arguments(&["--taxa-to-return", "1.5"]).is_err());
+    }
+
+    fn parse_count_arguments(extra: &[&str]) -> Result<AnalysisArguments, Box<dyn Error>> {
+        let mut values = vec![
+            "bin",
+            "--peptide-taxa",
+            "taxa.tsv",
+            "--peptide-scores",
+            "scores.tsv",
+            "--peptide-counts",
+            "counts.tsv",
+        ];
+        values.extend_from_slice(extra);
+        parse_arguments_from(args(&values), "--peptide-taxa", "--taxa-to-return", "default.tsv", 100)
+    }
+
+    #[test]
     fn parse_arguments_errors_on_missing_relationship_flag() {
         let result = parse_arguments_from(
             args(&["bin", "--peptide-scores", "s.tsv", "--peptide-counts", "c.tsv"]),
             "--peptide-taxa",
+            "--taxa-to-return",
             "default.tsv",
+            100,
         );
         assert!(result.is_err());
     }
@@ -549,7 +642,9 @@ mod tests {
         let result = parse_arguments_from(
             args(&["bin", "--totally-unknown", "value"]),
             "--peptide-taxa",
+            "--taxa-to-return",
             "default.tsv",
+            100,
         );
         assert!(result.is_err());
     }
@@ -559,7 +654,9 @@ mod tests {
         let result = parse_arguments_from(
             args(&["bin", "--peptide-taxa"]),
             "--peptide-taxa",
+            "--taxa-to-return",
             "default.tsv",
+            100,
         );
         assert!(result.is_err());
     }

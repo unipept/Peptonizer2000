@@ -323,7 +323,26 @@ A peptide can appear on multiple rows of the relationships file to associate it 
   --output functional_analysis_results.tsv
 ```
 
-`--output` is optional and defaults to `<tool_name>_results.tsv` in the current directory. Run any tool with
+Optional flags:
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--output FILE` | `<tool_name>_results.tsv` | Where the results TSV is written |
+| `--taxa-to-return N` / `--proteins-to-return N` / `--functions-to-return N` | `100` | How many top-weighted IDs (taxa/proteins/functions) are included in the factor graph |
+| `--max-peptides N` | `10000` | Size of the weighted random sample of peptides taken before weighing (less degenerate peptides are more likely to be kept) |
+
+Both counts must be whole numbers ≥ 1. Larger values make the factor graph bigger and the run slower. For example:
+
+```bash
+./target/release/protein_inference \
+  --peptide-proteins peptide_protein.tsv \
+  --peptide-scores peptide_scores.tsv \
+  --peptide-counts peptide_counts.tsv \
+  --proteins-to-return 250 \
+  --max-peptides 20000
+```
+
+The output file defaults to `<tool_name>_results.tsv` in the current directory. Run any tool with
 `--help`/`-h` for a one-line usage reminder. Unlike the Snakemake workflow's `config.yaml`, the alpha/beta/prior
 grid-search ranges are currently fixed per tool rather than user-configurable.
 

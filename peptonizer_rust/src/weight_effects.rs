@@ -3,6 +3,11 @@ use crate::random::select_random_samples_with_weights;
 use csv::Writer;
 use crate::unipept_communicator::get_unique_lineage_at_specified_rank_async;
 
+/// Default number of peptides randomly sampled (weighted by degeneracy) before weighing effects.
+/// Used by the WASM/Python bindings via [`perform_effects_weighing`]; native callers can choose
+/// their own value through [`perform_effects_weighing_typed`].
+pub const DEFAULT_MAX_PEPTIDES: usize = 10000;
+
 /// Represents the main pipeline for weighting effects based on peptide evidence.
 ///
 /// # Arguments
@@ -29,7 +34,7 @@ pub async fn perform_effects_weighing(
     let peptide_scores_map: HashMap<String, f32> = serde_json::from_str(&pep_scores)?;
     let peptide_counts_map: HashMap<String, usize> = serde_json::from_str(&pep_psm_counts)?;
 
-    perform_effects_weighing_typed(peptide_effects, peptide_scores_map, peptide_counts_map, max_effects, effects_rank).await
+    perform_effects_weighing_typed(peptide_effects, peptide_scores_map, peptide_counts_map, max_effects, DEFAULT_MAX_PEPTIDES, effects_rank).await
 }
 
 /// Same pipeline as [`perform_effects_weighing`], but for native Rust callers (e.g. `peptonizer_analysis`)
@@ -42,6 +47,9 @@ pub async fn perform_effects_weighing(
 /// * `peptide_scores_map` - Mapping of peptide sequences to their scores (float).
 /// * `peptide_counts_map` - Mapping of peptide sequences to their PSM counts (int).
 /// * `max_effects` - Maximum number of effects to include in output.
+/// * `max_peptides` - Maximum number of peptides kept by the weighted random sample (less
+///   degenerate peptides are more likely to be kept). [`DEFAULT_MAX_PEPTIDES`] is the default
+///   used by the bindings.
 /// * `effects_rank` - NCBI rank (supported by Unipept) to normalize the effects to, or `None` to use the effects as-is.
 ///
 /// # Returns
@@ -54,6 +62,7 @@ pub async fn perform_effects_weighing_typed(
     peptide_scores_map: HashMap<String, f32>,
     peptide_counts_map: HashMap<String, usize>,
     max_effects: usize,
+    max_peptides: usize,
     effects_rank: Option<String>
 ) -> Result<(String, String), Box<dyn std::error::Error>> {
     let peptides: Vec<String> = peptide_effects.keys().map(|seq| seq.to_owned()).collect();
@@ -63,7 +72,7 @@ pub async fn perform_effects_weighing_typed(
     if let Some(ref rank) = effects_rank {
         normalize_unipept_responses(&mut effects, rank).await?;
     }
-    let chosen_effects: HashSet<usize> = weighted_random_sample(&effects, 10000)?;
+    let chosen_effects: HashSet<usize> = weighted_random_sample(&effects, max_peptides)?;
 
     let peptides: Vec<String> = chosen_effects.iter().map(|idx| peptides[*idx].to_owned()).collect();
     let effects: Vec<Vec<usize>> = chosen_effects.iter().map(|idx| effects[*idx].to_owned()).collect();
@@ -278,6 +287,23 @@ mod tests {
         assert!(seq_csv.contains("sequence"));
         assert!(seq_csv.contains("PEP1"));
         assert!(effects_csv.contains("effect"));
+    }
+
+    #[tokio::test]
+    async fn test_perform_effects_weighing_typed_respects_max_peptides() {
+        let peptide_effects = HashMap::from([
+            ("PEP1".to_string(), vec![3000]),
+            ("PEP2".to_string(), vec![3500]),
+        ]);
+        let scores = HashMap::from([("PEP1".to_string(), 0.8), ("PEP2".to_string(), 0.5)]);
+        let counts = HashMap::from([("PEP1".to_string(), 4), ("PEP2".to_string(), 2)]);
+
+        let (seq_csv, _) = perform_effects_weighing_typed(peptide_effects, scores, counts, 10, 1, None)
+            .await
+            .unwrap();
+
+        let kept = ["PEP1", "PEP2"].iter().filter(|peptide| seq_csv.contains(*peptide)).count();
+        assert_eq!(kept, 1);
     }
 
     #[test]
