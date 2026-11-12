@@ -328,7 +328,7 @@ mod pyo3 {
     pub fn generate_pepgm_graph_py(py: Python<'_>, effects_weights_csv: String) -> Py<PyBytes> {
         let graph_bytes = generate_graph(effects_weights_csv).unwrap();
 
-        PyBytes::new_bound(py, &graph_bytes).into()
+        PyBytes::new(py, &graph_bytes).into()
     }
 
     /// Runs belief propagation on a serialized factor graph (as produced by `generate_graph`).
