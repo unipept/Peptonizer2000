@@ -45,6 +45,7 @@
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#running-an-analysis-natively-without-snakemake-or-the-website">Running an analysis natively, without Snakemake or the website</a></li>
+    <li><a href="#running-the-analysis-tools-with-docker">Running the analysis tools with Docker</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -359,6 +360,50 @@ taxon_id	probability
 
 (`protein_id`/`function_id` for the other two tools; these report the original protein/function ID string
 instead of an internal ID.)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- DOCKER -->
+## Running the analysis tools with Docker
+
+The `Dockerfile` in the repository root packages the three `peptonizer_analysis` command-line tools
+(`taxonomic_analysis`, `protein_inference` and `functional_analysis`) into a small Docker image. This is useful
+on machines without a Rust toolchain, or when every run of a pipeline should use exactly the same version of
+the Peptonizer2000. The image only contains the compiled tools; input files and results are shared with the
+container through a mounted directory.
+
+### Building
+
+```bash
+docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) -t peptonizer .
+```
+
+Run this from the repository root. The `GIT_COMMIT` build argument is optional and records the commit the image
+was built from, which can be looked up later with:
+
+```bash
+docker image inspect peptonizer --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'
+```
+
+### Usage
+
+Mount the directory that holds your input files to `/data` inside the container and call one of the tools by
+name. The input files and optional flags are the same as described
+[above](#running-an-analysis-natively-without-snakemake-or-the-website). A small example input is provided in
+`peptonizer_analysis/tests/example`:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD/peptonizer_analysis/tests/example:/data" \
+  peptonizer protein_inference \
+  --peptide-proteins proteins.tsv \
+  --peptide-scores scores.tsv \
+  --peptide-counts counts.tsv \
+  --output protein_inference_results.tsv
+```
+
+The results are written to the mounted directory. `--user "$(id -u):$(id -g)"` makes sure the output files belong
+to your own user. Keep in mind that `taxonomic_analysis` needs network access to query the Unipept API.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

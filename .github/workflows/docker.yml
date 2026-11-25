@@ -1,0 +1,61 @@
+name: Docker
+
+on:
+  push:
+    branches:
+      - '**'
+    paths: &docker_paths
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'peptonizer_rust/**'
+      - '!peptonizer_rust/dist/**'
+      - 'peptonizer_analysis/**'
+      - '.github/workflows/docker.yml'
+  pull_request:
+    paths: *docker_paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    name: Docker build & smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build --build-arg GIT_COMMIT=${{ github.sha }} -t peptonizer:ci .
+
+      - name: Programs start
+        run: |
+          for tool in taxonomic_analysis protein_inference functional_analysis; do
+            docker run --rm peptonizer:ci "$tool" --help
+          done
+
+      - name: Example analysis
+        run: |
+          mkdir -p out
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD/peptonizer_analysis/tests/example:/data:ro" \
+            -v "$PWD/out:/out" \
+            peptonizer:ci protein_inference \
+              --peptide-proteins proteins.tsv \
+              --peptide-scores scores.tsv \
+              --peptide-counts counts.tsv \
+              --output /out/protein_inference.tsv
+
+      - name: Check output
+        run: |
+          cat out/protein_inference.tsv
+          test "$(head -n 1 out/protein_inference.tsv)" = "$(printf 'protein_id\tprobability')"
+          rows=$(tail -n +2 out/protein_inference.tsv | wc -l)
+          test "$rows" -eq 5
+          tail -n +2 out/protein_inference.tsv | awk -F'\t' '$2 < 0 || $2 > 1 { exit 1 }'
