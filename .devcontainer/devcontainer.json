@@ -1,24 +1,36 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/anaconda
+// For format details, see https://aka.ms/devcontainer.json.
 {
   "name": "Peptonizer",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  "features": {
-    "ghcr.io/rocker-org/devcontainer-features/miniforge:2": {},
-    "ghcr.io/devcontainers/features/node:1":  {},
+  // Uses the "build" stage of the repo-root Dockerfile (Rust toolchain + python3), the same
+  // environment that compiles the Docker image for servers.
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "..",
+    "target": "build"
   },
 
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
+  // Node (peptonizer_ts) and conda/mamba (snakemake workflow).
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/rocker-org/devcontainer-features/miniforge:2": {}
+  },
 
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "python --version",
+  // Keep the Linux build output in a volume, separate from the macOS target/ dir on the host.
+  "mounts": [
+    "source=peptonizer-target,target=${containerWorkspaceFolder}/target,type=volume"
+  ],
 
-  // Configure tool-specific properties.
-  // "customizations": {},
+  // Tools that the "build" stage does not contain: clippy, rustfmt, the wasm32 target and
+  // wasm-pack (WASM build for peptonizer_ts), and maturin (Python wheel for snakemake).
+  "postCreateCommand": "rustup component add clippy rustfmt && rustup target add wasm32-unknown-unknown && cargo install --locked wasm-pack && apt-get update && apt-get install -y --no-install-recommends python3-pip && pip3 install --break-system-packages maturin",
 
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer"]
+    }
+  },
+
+  // The rust image has no non-root user; the toolchain in /usr/local/cargo is owned by root.
+  "remoteUser": "root"
 }
