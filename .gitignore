@@ -102,3 +102,6 @@ peptonizer_rust/target/
 peptonizer_rust/node_modules/
 peptonizer_rust/pkg/
 peptonizer_rust/yarn.lock
+
+# Dev container feature lockfile
+.devcontainer/devcontainer-lock.json
